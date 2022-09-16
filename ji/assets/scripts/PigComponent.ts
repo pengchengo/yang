@@ -5,7 +5,9 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-const {ccclass, property} = cc._decorator;
+import { _decorator, Component, Sprite, Node, resources, SpriteAtlas, Color } from "cc";
+
+const {ccclass, property} = _decorator;
 
 export enum PigState{
     InList = 1,
@@ -15,9 +17,9 @@ export enum PigState{
 }
 
 @ccclass
-export default class PigComponent extends cc.Component {
+export default class PigComponent extends Component {
     @property({
-        type:cc.Integer,
+        type:Number,
         tooltip:"不同物品的对应ID"
     })
     crushId: Number = 0;
@@ -49,18 +51,17 @@ export default class PigComponent extends cc.Component {
 
     start () {
         this.curState = PigState.InList
-        this.startX = this.node.x
-        this.startY = this.node.y
+        this.startX = this.node.getPosition().x
+        this.startY = this.node.getPosition().y
         //this.node.getChildByName("lbId").getComponent(cc.Label).string = this.crushId+""
-        /*cc.resources.load("sheep/sheep"+GameSystem.lastLevelId,cc.SpriteAtlas,(err: Error, atlas:cc.SpriteAtlas)=>{
-            let bgSprite = this.node.getComponent(cc.Sprite)
-            bgSprite.spriteFrame = atlas.getSpriteFrame(GameSystem.lastLevelId+"_1")
-            let maskNode = this.node.getChildByName("mask")
-            maskNode.zIndex = 2
-            maskNode.opacity = 255
-            maskNode.color = cc.Color.WHITE
-            maskNode.getComponent(cc.Sprite).spriteFrame = atlas.getSpriteFrame(GameSystem.lastLevelId+"_2")
-        })*/
+        resources.load("sheep/sheep141",SpriteAtlas,(err: Error, atlas:SpriteAtlas)=>{
+            let bgSprite = this.node.getComponent(Sprite)
+            //bgSprite.spriteFrame = atlas.getSpriteFrame(GameSystem.lastLevelId+"_1")
+            let maskNode = this.createSpriteNode(this.node, atlas.getSpriteFrame("141_2"))
+            /*maskNode.zIndex = 2
+            maskNode.opacity = 102
+            maskNode.color = Color.WHITE*/
+        })
     }
 
     init(crushId){
@@ -84,8 +85,8 @@ export default class PigComponent extends cc.Component {
     }
 
     createSpriteNode(rootNode, spriteFrame){
-        let picNode = new cc.Node()
-        let sprite = picNode.addComponent(cc.Sprite)
+        let picNode = new Node()
+        let sprite = picNode.addComponent(Sprite)
         sprite.spriteFrame = spriteFrame
         rootNode.addChild(picNode)
         return picNode
