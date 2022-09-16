@@ -1,6 +1,3 @@
-import { PoolSystem } from "./PoolSystem"
-import { TimeSystem } from "./TimeSystem"
-
 export class _UtilsSystem {
     lastPlayCoinTime = 0
 
@@ -19,17 +16,7 @@ export class _UtilsSystem {
     }
 
     showTip(content, state = 0){
-        let tipCom = PoolSystem.createObj(PoolSystem.TipCom)
-        tipCom.getChild("content").text = content
-        tipCom.x = fgui.GRoot.inst.width/2
-        tipCom.y = fgui.GRoot.inst.height/2
-        tipCom.getController("state").selectedIndex = state
-        TimeSystem.timeUpdate(1, (scale)=>{
-            tipCom.y = cc.winSize.height/2 - 200*scale
-            if(scale == 1){
-                PoolSystem.revert(PoolSystem.TipCom, tipCom)
-            }
-        })
+        
     }
 
     lerp(a, b, w) {

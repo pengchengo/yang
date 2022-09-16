@@ -7,7 +7,7 @@
 
 const {ccclass, property} = cc._decorator;
 
-export enum CrushState{
+export enum PigState{
     InList = 1,
     InBottom = 2,
     Reset = 3,
@@ -15,7 +15,7 @@ export enum CrushState{
 }
 
 @ccclass
-export default class CrushComponent extends cc.Component {
+export default class PigComponent extends cc.Component {
     @property({
         type:cc.Integer,
         tooltip:"不同物品的对应ID"
@@ -23,10 +23,10 @@ export default class CrushComponent extends cc.Component {
     crushId: Number = 0;
 
     @property({
-        type:[CrushComponent],
+        type:[PigComponent],
         tooltip:"覆盖在其上一层的物品ID列表"
     })
-    overCrushList: CrushComponent[] = [];
+    overPigList: PigComponent[] = [];
 
     /*@property({
         type:cc.Integer,
@@ -40,7 +40,7 @@ export default class CrushComponent extends cc.Component {
     isRemove = false
     startX = 0
     startY = 0
-    curState = CrushState.InList
+    curState = PigState.InList
     resetIndex = -1
 
     onLoad () {
@@ -48,7 +48,7 @@ export default class CrushComponent extends cc.Component {
     }
 
     start () {
-        this.curState = CrushState.InList
+        this.curState = PigState.InList
         this.startX = this.node.x
         this.startY = this.node.y
         //this.node.getChildByName("lbId").getComponent(cc.Label).string = this.crushId+""

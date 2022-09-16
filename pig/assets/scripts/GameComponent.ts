@@ -5,7 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/2.4/manual/en/scripting/life-cycle-callbacks.html
 
-import CrushComponent, { CrushState } from "./CrushComponent";
+import PigComponent, { PigState } from "./PigComponent";
 import { TimeSystem } from "./TimeSystem";
 import { UtilsSystem } from "./UtilsSystem";
 
@@ -80,9 +80,9 @@ export default class GameComponent extends cc.Component {
     }
 
     needShowMask(cpt){
-        for(let i = 0; i < cpt.overCrushList.length; i++){
-            let overCpt = cpt.overCrushList[i]
-            if(overCpt.curState == CrushState.InList){
+        for(let i = 0; i < cpt.overPigList.length; i++){
+            let overCpt = cpt.overPigList[i]
+            if(overCpt.curState == PigState.InList){
                 return true
             }
             if(this.needShowMask(overCpt)){
@@ -130,7 +130,7 @@ export default class GameComponent extends cc.Component {
                     break
                 }
                 this.bottomCptList.splice(0, 1)
-                cpt.curState = CrushState.Reset
+                cpt.curState = PigState.Reset
                 cpt.resetIndex = resetPos
                 this.resetMap[cpt.resetIndex] = true
                 let posNode = posList.getChildByName("resetpos"+resetPos)
@@ -162,7 +162,7 @@ export default class GameComponent extends cc.Component {
             return false
         }
         let lastCpt = this.moveCptList[this.moveCptList.length-1]
-        if(lastCpt.curState == CrushState.Removed){
+        if(lastCpt.curState == PigState.Removed){
             return false
         }
         return true
@@ -173,12 +173,12 @@ export default class GameComponent extends cc.Component {
             return
         }
         let lastCpt = this.moveCptList[this.moveCptList.length-1]
-        if(lastCpt.curState == CrushState.Removed){
+        if(lastCpt.curState == PigState.Removed){
             return
         }
         lastCpt.node.x = lastCpt.startX
         lastCpt.node.y = lastCpt.startY
-        lastCpt.curState = CrushState.InList
+        lastCpt.curState = PigState.InList
         for(let i = lastCpt.bottomIndex+1; i < this.bottomCptList.length; i++){
             let cpt = this.bottomCptList[i]
             cpt.bottomIndex = cpt.bottomIndex - 1
@@ -202,7 +202,7 @@ export default class GameComponent extends cc.Component {
         let index = 1
         for (let i = 0; i < childList.length; i++) {
             let child = childList[i]
-            let crushCpt = child.getComponent(CrushComponent)
+            let crushCpt = child.getComponent(PigComponent)
             if(crushCpt){
                 crushCpt.index = index
                 crushCpt.node.zIndex = index
@@ -256,7 +256,7 @@ export default class GameComponent extends cc.Component {
         let index = 0
         for (let i = 0; i < childList.length; i++) {
             let child = childList[i]
-            let crushCpt = child.getComponent(CrushComponent)
+            let crushCpt = child.getComponent(PigComponent)
             if(crushCpt){
                 crushCpt.index = index
                 crushCpt.zIndex = index
@@ -296,7 +296,7 @@ export default class GameComponent extends cc.Component {
     }
 
     autoResetOverList(cpt){
-        cpt.overCrushList = []
+        cpt.overPigList = []
         let ax1 = cpt.node.x
         let ay1 = cpt.node.y
         let ax2 = cpt.node.x + this.itemWidth
@@ -311,7 +311,7 @@ export default class GameComponent extends cc.Component {
                     let by2 = otherCpt.node.y + this.itemHeight
                     let area = this.computeArea(ax1, ay1, ax2, ay2, bx1, by1, bx2, by2)
                     if(area/this.itemArea > this.areamPer){
-                        cpt.overCrushList.push(otherCpt)
+                        cpt.overPigList.push(otherCpt)
                     }
                 }
             }
@@ -445,9 +445,9 @@ export default class GameComponent extends cc.Component {
             this.checkLose()
             return
         }
-        crushCpt.curState = CrushState.Removed
-        cpt1.curState = CrushState.Removed
-        cpt2.curState = CrushState.Removed
+        crushCpt.curState = PigState.Removed
+        cpt1.curState = PigState.Removed
+        cpt2.curState = PigState.Removed
         TimeSystem.scheduleOnce("checkFinish", this.flyTime+1, ()=>{
             this.checkFinishGame()
         })
@@ -493,7 +493,7 @@ export default class GameComponent extends cc.Component {
                 insertIndex = this.bottomCptList.length
             }
         }
-        crushCpt.curState = CrushState.InBottom
+        crushCpt.curState = PigState.InBottom
         this.moveCptList.push(crushCpt)
         crushCpt.bottomIndex = insertIndex
         this.bottomCptList.splice(insertIndex, 0, crushCpt)
