@@ -33,6 +33,9 @@ export default class GameComponent extends cc.Component {
     sceneAnim = null
     isPause = false
     maskLayer = null
+    back3Num = 0
+    back1Num = 0
+    refreshNum = 0
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -41,6 +44,10 @@ export default class GameComponent extends cc.Component {
     start () {
         GameComponent.Inst = this
         this.node = this.node
+
+        this.back3Num = 0
+        this.back1Num = 0
+        this.refreshNum = 0
         this.slotPosList = []
         this.effectList = []
         this.hs3Map = {}
