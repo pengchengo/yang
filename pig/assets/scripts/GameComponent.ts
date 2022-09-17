@@ -6,6 +6,7 @@
 //  - https://docs.cocos.com/creator/2.4/manual/en/scripting/life-cycle-callbacks.html
 
 import PigComponent, { PigState } from "./PigComponent";
+import PopLayer from "./PopLayer";
 import { TimeSystem } from "./TimeSystem";
 import { UtilsSystem } from "./UtilsSystem";
 
@@ -13,6 +14,7 @@ const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class GameComponent extends cc.Component {
+    static Inst = null
     pigAtlas = null
     pigCfg1 = [1,2,3,4,1,2,3,4,1,2,3,4]
     pigWidth = 90
@@ -28,28 +30,30 @@ export default class GameComponent extends cc.Component {
     effectList = []
     isPlayAnim = false
     hsCptList = []
-    retiveTime = 0
     sceneAnim = null
     isPause = false
+    maskLayer = null
 
     // LIFE-CYCLE CALLBACKS:
 
     // onLoad () {}
 
     start () {
+        GameComponent.Inst = this
         this.node = this.node
         this.slotPosList = []
         this.effectList = []
         this.hs3Map = {}
         this.isPlayAnim = false
+        this.initMask()
         this.sceneAnim = this.node.getChildByName("anim")
         this.sceneAnim.active = false
         let posList = this.node.getChildByName("posList")
         for (let i = 1; i <= this.slotNum; i++) {
             let item = posList.getChildByName("pos"+i)
-            let flash = item.getChildByName("flash")
-            flash.active = false
-            this.effectList.push(flash)
+            let effect = item.getChildByName("flash")
+            effect.active = false
+            this.effectList.push(effect)
             this.slotPosList.push(item)
         }
         let pigList1 = this.node.getChildByName("pigList1")
@@ -63,8 +67,26 @@ export default class GameComponent extends cc.Component {
         })
     }
     
+    initMask(){
+        this.maskLayer = this.node.getChildByName("uiRoot").getChildByName("maskLayer")
+        this.maskLayer.active = false
+        this.maskLayer.on(cc.Node.EventType.TOUCH_START, (evt)=>{
+            console.log("被mask遮挡")
+        })
+    }
+
+    static showMask(){
+        GameComponent.Inst.maskLayer.active = true
+    }
+
+    static hideMask(){
+        GameComponent.Inst.maskLayer.active = false
+    }
+
     public onClickBtn1(){
-        this.backOne()
+        PopLayer.show(()=>{
+            this.backOne()
+        })
     }
 
     public onClickBtn3(){
@@ -82,13 +104,13 @@ export default class GameComponent extends cc.Component {
     registBtn(){
     }
 
-    needShowMask(cpt){
+    refreshMk(cpt){
         for(let i = 0; i < cpt.upPigList.length; i++){
             let overCpt = cpt.upPigList[i]
             if(overCpt.curState == PigState.InList){
                 return true
             }
-            if(this.needShowMask(overCpt)){
+            if(this.refreshMk(overCpt)){
                 return true
             }
         }
@@ -98,7 +120,7 @@ export default class GameComponent extends cc.Component {
     refreshMask(){
         for(let i = 0; i < this.pigCptList.length; i++){
             let cpt = this.pigCptList[i]
-            if(this.needShowMask(cpt)){
+            if(this.refreshMk(cpt)){
                 cpt.mk.active = true
             }else{
                 cpt.mk.active = false
@@ -219,6 +241,7 @@ export default class GameComponent extends cc.Component {
     }
 
     setPig(cpt, id, index){
+        cpt.curState = PigState.InList
         cpt.index = index
         cpt.node.zIndex = index
         cpt.zIndex = index
@@ -356,7 +379,7 @@ export default class GameComponent extends cc.Component {
             let maxZIndex = -1
             for(let i = 0; i < this.pigCptList.length; i++){
                 let cpt = this.pigCptList[i]
-                if (!this.needShowMask(cpt) && UtilsSystem.checkTouchNode(cpt.icon, touchBeginPos)) {
+                if (!this.refreshMk(cpt) && UtilsSystem.checkTouchNode(cpt.icon, touchBeginPos)) {
                     if(cpt.zIndex > maxZIndex){
                         maxCpt = cpt
                         maxI = i
@@ -415,20 +438,19 @@ export default class GameComponent extends cc.Component {
                 //GameSystem.loseAnimList = [this.node.getChildByName("level2")]
                 //GameSystem.loseAnim()
             }else{
-                this.retiveTime = this.retiveTime + 1
                 //SheepUI.showUI(SheepToolType.Revive)
             }
         }
     }
 
     composeAnim(cpt){
-        let flash = this.effectList[cpt.bottomIndex]
-        flash.active = true
-        flash.getComponent(cc.ParticleSystem).resetSystem();
-        cc.tween(flash)
+        let effect = this.effectList[cpt.bottomIndex]
+        effect.active = true
+        effect.getComponent(cc.ParticleSystem).resetSystem();
+        cc.tween(effect)
             .delay(0.5)
             .call(()=>{
-                flash.active = false
+                effect.active = false
             })
             .start()
         cc.tween(cpt.node)
