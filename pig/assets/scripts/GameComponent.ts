@@ -232,11 +232,11 @@ export default class GameComponent extends cc.Component {
             name = "100" + id
         }
         let icon = this.maskCp(cpt.node, atlas.getSpriteFrame(name), "icon")
-        icon.scale = 0.5
+        icon.scale = 1
         cpt.icon = icon
         let mk = this.maskCp(cpt.node, atlas.getSpriteFrame("mask"), "black")
         mk.zIndex = 2
-        mk.scale = 0.5
+        mk.scale = 1
         //mk.opacity = 102
         //mk.color = cc.Color.WHITE
         cpt.mk = mk
