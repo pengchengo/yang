@@ -13,14 +13,16 @@ const {ccclass, property} = cc._decorator;
 
 @ccclass
 export default class GameComponent extends cc.Component {
+    pigAtlas = null
+    pigCfg1 = [1,2,3,4,1,2,3,4,1,2,3,4]
     areamPer = 1/6
-    itemWidth = 89
-    itemHeight = 99
-    itemArea = 89*99
+    pigWidth = 90
+    pigHeight = 100
+    itemArea = 90*100
     flyTime = 0.1
     levelNode
     limitBottomNum = 7
-    crushCptList = []
+    pigCptList = []
     bottomCptList = []
     bottomPosList = []
     resetMap = {}
@@ -38,20 +40,16 @@ export default class GameComponent extends cc.Component {
     // onLoad () {}
 
     start () {
-        this.loadLevelSuccess()
-    }
-
-    loadLevelSuccess(){
-        this.levelNode = this.node
+        this.node = this.node
         this.bottomPosList = []
         this.flashList = []
         this.resetMap = {}
         this.isPlayAnim = false
         this.backThreeTime = 0
         this.retiveTime = 0
-        this.sceneAnim = this.levelNode.getChildByName("sceneAnim")
+        this.sceneAnim = this.node.getChildByName("anim")
         this.sceneAnim.active = false
-        let posList = this.levelNode.getChildByName("posList")
+        let posList = this.node.getChildByName("posList")
         for (let i = 1; i <= this.limitBottomNum; i++) {
             let item = posList.getChildByName("pos"+i)
             let flash = item.getChildByName("flash")
@@ -59,13 +57,16 @@ export default class GameComponent extends cc.Component {
             this.flashList.push(flash)
             this.bottomPosList.push(item)
         }
-        let level1 = this.levelNode.getChildByName("level1")
-        this.levelNode.getChildByName("level2").active = false
+        let pigList1 = this.node.getChildByName("pigList1")
+        this.node.getChildByName("pigList2").active = false
         this.passTime = 0
         this.isPause = false
-        this.initLevel(level1)
-        this.registTouch()
-        //this.registBtn()
+        
+        cc.resources.load("pig",cc.SpriteAtlas,(err: Error, atlas:cc.SpriteAtlas)=>{
+            this.pigAtlas = atlas
+            this.initPigList1(pigList1)
+            this.registTouch()
+        })
     }
     
     update(dt){
@@ -93,12 +94,12 @@ export default class GameComponent extends cc.Component {
     }
 
     refreshMask(){
-        for(let i = 0; i < this.crushCptList.length; i++){
-            let cpt = this.crushCptList[i]
+        for(let i = 0; i < this.pigCptList.length; i++){
+            let cpt = this.pigCptList[i]
             if(this.needShowMask(cpt)){
-                cpt.maskNode.active = true
+                cpt.mk.active = true
             }else{
-                cpt.maskNode.active = false
+                cpt.mk.active = false
             }
         }
     }
@@ -121,7 +122,7 @@ export default class GameComponent extends cc.Component {
     }
 
     backThree(isRevive){
-        let posList = this.levelNode.getChildByName("posList")
+        let posList = this.node.getChildByName("posList")
         for(let i = 3; i >= 1; i--){
             let cpt = this.bottomCptList[0]
             if(cpt){
@@ -136,7 +137,7 @@ export default class GameComponent extends cc.Component {
                 let posNode = posList.getChildByName("resetpos"+resetPos)
                 cpt.node.x = posNode.x
                 cpt.node.y = posNode.y
-                this.crushCptList.push(cpt)
+                this.pigCptList.push(cpt)
                 for(let j = this.moveCptList.length-1; j >= 0; j--){
                     if(this.moveCptList[j] == cpt){
                         this.moveCptList.splice(j, 1)
@@ -187,50 +188,79 @@ export default class GameComponent extends cc.Component {
             cpt.node.y = tPos.y
         }
         this.bottomCptList.splice(lastCpt.bottomIndex, 1)
-        this.crushCptList.push(lastCpt)
+        this.pigCptList.push(lastCpt)
         this.moveCptList.pop()
         this.refreshMask()
     }
 
-    initLevel(levelRoot){
-        levelRoot.active = true
-        this.crushCptList = []
+    initPigList1(pigRoot){
+        pigRoot.active = true
+        this.pigCptList = []
         this.bottomCptList = []
         this.moveCptList = []
         //@ts-ignore
-        let childList = levelRoot._children
+        let childList = pigRoot._children
         let index = 1
         for (let i = 0; i < childList.length; i++) {
             let child = childList[i]
-            let crushCpt = child.getComponent(PigComponent)
-            if(crushCpt){
-                crushCpt.index = index
-                crushCpt.node.zIndex = index
-                crushCpt.zIndex = index
-                this.crushCptList.push(crushCpt)
+            let pigCpt = child.getComponent(PigComponent)
+            if(pigCpt){
+                this.setPig(pigCpt, this.pigCfg1[index-1], index)
+                this.pigCptList.push(pigCpt)
                 index = index + 1
             }
         }
-        for (let i = 0; i < this.crushCptList.length; i++) {
-            let crushCpt = this.crushCptList[i]
-            this.autoResetOverList(crushCpt)
+        for (let i = 0; i < this.pigCptList.length; i++) {
+            let pigCpt = this.pigCptList[i]
+            this.setUpList(pigCpt)
         }
         this.refreshMask()
-        this.playMoveInAnim(levelRoot, 1)
+        this.playMoveInAnim(pigRoot, 1)
 
     }
 
-    playMoveInAnim(levelRoot,delayTime = 0){
-        levelRoot.y = 1000
-        cc.tween(levelRoot)
+    setPig(cpt, id, index){
+        cpt.index = index
+        cpt.node.zIndex = index
+        cpt.zIndex = index
+        cpt.pigId = id
+        let atlas = this.pigAtlas
+        let name = ""
+        if(id < 10){
+            name = "1000" + id
+        }else{
+            name = "100" + id
+        }
+        let icon = this.maskCp(cpt.node, atlas.getSpriteFrame(name), "icon")
+        icon.scale = 0.5
+        cpt.icon = icon
+        let mk = this.maskCp(cpt.node, atlas.getSpriteFrame("mask"), "black")
+        mk.zIndex = 2
+        mk.scale = 0.5
+        //mk.opacity = 102
+        //mk.color = cc.Color.WHITE
+        cpt.mk = mk
+    }
+
+    maskCp(r, s, name){
+        let n = new cc.Node(name)
+        let sprite = n.addComponent(cc.Sprite)
+        sprite.spriteFrame = s
+        r.addChild(n)
+        return n
+    }
+
+    playMoveInAnim(pigRoot,delayTime = 0){
+        pigRoot.y = 1000
+        cc.tween(pigRoot)
             .delay(delayTime)
             .to(1, { position: cc.v2(0, 0) }, { easing: 'backOut' })
             .start()
     }
 
-    initRandomLevel(levelRoot){
-        levelRoot.active = true
-        this.crushCptList = []
+    initRandomLevel(pigRoot){
+        pigRoot.active = true
+        this.pigCptList = []
         this.bottomCptList = []
         this.moveCptList = []
         let iconList = []
@@ -251,38 +281,42 @@ export default class GameComponent extends cc.Component {
             }
         }
         UtilsSystem.shuffle(itemIdList)
-        //@ts-ignore
-        let childList = levelRoot._children
+        
+        
         let index = 0
-        for (let i = 0; i < childList.length; i++) {
-            let child = childList[i]
-            let crushCpt = child.getComponent(PigComponent)
-            if(crushCpt){
-                crushCpt.index = index
-                crushCpt.zIndex = index
-                crushCpt.init(itemIdList[index])
-                this.crushCptList.push(crushCpt)
-                index = index + 1
+        let checkNode = (root)=>{
+            //@ts-ignore
+            let childList = root._children
+            for (let i = 0; i < childList.length; i++) {
+                let child = childList[i]
+                checkNode(child)
+                let pigCpt = child.getComponent(PigComponent)
+                if(pigCpt){
+                    this.setPig(pigCpt, itemIdList[index], index)
+                    this.pigCptList.push(pigCpt)
+                    index = index + 1
+                }
             }
         }
-        for (let i = 0; i < this.crushCptList.length; i++) {
-            let crushCpt = this.crushCptList[i]
-            this.autoResetOverList(crushCpt)
+        checkNode(pigRoot)
+        for (let i = 0; i < this.pigCptList.length; i++) {
+            let pigCpt = this.pigCptList[i]
+            this.setUpList(pigCpt)
         }
-        console.log("this.crushCptList.length=",this.crushCptList.length)
+        console.log("this.pigCptList.length=",this.pigCptList.length)
         this.refreshMask()
-        this.playMoveInAnim(levelRoot)
+        this.playMoveInAnim(pigRoot)
     }
 
     collide(ax1,ay1,bx1,by1) {
         var maxX,maxY,minX,minY
 
-        maxX = ax1+this.itemWidth >= bx1+this.itemWidth ? ax1+this.itemWidth : bx1+this.itemWidth
-        maxY = ay1+this.itemHeight >= by1+this.itemHeight ? ay1+this.itemHeight : by1+this.itemHeight
+        maxX = ax1+this.pigWidth >= bx1+this.pigWidth ? ax1+this.pigWidth : bx1+this.pigWidth
+        maxY = ay1+this.pigHeight >= by1+this.pigHeight ? ay1+this.pigHeight : by1+this.pigHeight
         minX = ax1 <= bx1 ? ax1 : bx1
         minY = ay1 <= by1 ? ay1 : by1
 
-        if(maxX - minX < this.itemWidth+this.itemWidth && maxY - minY < this.itemHeight+this.itemHeight){
+        if(maxX - minX < this.pigWidth+this.pigWidth && maxY - minY < this.pigHeight+this.pigHeight){
           return true
         }else{
           return false
@@ -295,20 +329,20 @@ export default class GameComponent extends cc.Component {
         return overlapArea;//this.itemArea + this.itemArea - overlapArea;
     }
 
-    autoResetOverList(cpt){
+    setUpList(cpt){
         cpt.overPigList = []
         let ax1 = cpt.node.x
         let ay1 = cpt.node.y
-        let ax2 = cpt.node.x + this.itemWidth
-        let ay2 = cpt.node.y + this.itemHeight
-        for (let i = 0; i < this.crushCptList.length; i++) {
-            let otherCpt = this.crushCptList[i]
+        let ax2 = cpt.node.x + this.pigWidth
+        let ay2 = cpt.node.y + this.pigHeight
+        for (let i = 0; i < this.pigCptList.length; i++) {
+            let otherCpt = this.pigCptList[i]
             if(otherCpt.zIndex > cpt.zIndex){
                 let bx1 = otherCpt.node.x
                 let by1 = otherCpt.node.y
                 if(this.collide(ax1,ay1,bx1,by1)){
-                    let bx2 = otherCpt.node.x + this.itemWidth
-                    let by2 = otherCpt.node.y + this.itemHeight
+                    let bx2 = otherCpt.node.x + this.pigWidth
+                    let by2 = otherCpt.node.y + this.pigHeight
                     let area = this.computeArea(ax1, ay1, ax2, ay2, bx1, by1, bx2, by2)
                     if(area/this.itemArea > this.areamPer){
                         cpt.overPigList.push(otherCpt)
@@ -336,9 +370,9 @@ export default class GameComponent extends cc.Component {
             let maxI = 0
             let maxCpt = null
             let maxZIndex = -1
-            for(let i = 0; i < this.crushCptList.length; i++){
-                let cpt = this.crushCptList[i]
-                if (!this.needShowMask(cpt) && UtilsSystem.checkTouchNode(cpt.node, touchBeginPos)) {
+            for(let i = 0; i < this.pigCptList.length; i++){
+                let cpt = this.pigCptList[i]
+                if (!this.needShowMask(cpt) && UtilsSystem.checkTouchNode(cpt.icon, touchBeginPos)) {
                     if(cpt.zIndex > maxZIndex){
                         maxCpt = cpt
                         maxI = i
@@ -348,7 +382,7 @@ export default class GameComponent extends cc.Component {
             }
             if(maxCpt){
                 //SoundMgr.playSound("yangclick")
-                this.crushCptList.splice(maxI, 1)
+                this.pigCptList.splice(maxI, 1)
                 this.flyToBottom(maxCpt)
                 this.refreshMask()
             }
@@ -377,14 +411,14 @@ export default class GameComponent extends cc.Component {
     }
 
     checkFinishGame(){
-        if(this.crushCptList.length == 0){
-            let level2 = this.levelNode.getChildByName("level2")
-            if(level2.active){
+        if(this.pigCptList.length == 0){
+            let pigList2 = this.node.getChildByName("pigList2")
+            if(pigList2.active){
                 //GameSystem.win()
             }else{
-                this.levelNode.getChildByName("level1").active = false
+                this.node.getChildByName("pigList1").active = false
                 this.playSceneAnim(()=>{
-                    this.initRandomLevel(level2)
+                    this.initRandomLevel(pigList2)
                 })
             }
         }
@@ -394,7 +428,7 @@ export default class GameComponent extends cc.Component {
         if(this.bottomCptList.length >= this.limitBottomNum){
             if(!this.canBackThree()){
                 //GameSystem.lose()
-                //GameSystem.loseAnimList = [this.levelNode.getChildByName("level2")]
+                //GameSystem.loseAnimList = [this.node.getChildByName("level2")]
                 //GameSystem.loseAnim()
             }else{
                 this.retiveTime = this.retiveTime + 1
@@ -421,7 +455,7 @@ export default class GameComponent extends cc.Component {
             .start()
     }
 
-    checkRemoveItems(crushCpt, moveList){
+    checkRemoveItems(pigCpt, moveList){
         let moveRight = ()=>{
             for(let i = 0; i < moveList.length; i++){
                 let cpt = moveList[i]
@@ -433,34 +467,34 @@ export default class GameComponent extends cc.Component {
                     .start()
             }
         }
-        if(crushCpt.bottomIndex < 2){
+        if(pigCpt.bottomIndex < 2){
             moveRight()
             this.checkLose()
             return
         }
-        let cpt1 = this.bottomCptList[crushCpt.bottomIndex-2]
-        let cpt2 = this.bottomCptList[crushCpt.bottomIndex-1]
-        if(crushCpt.crushId != cpt1.crushId || crushCpt.crushId != cpt2.crushId){
+        let cpt1 = this.bottomCptList[pigCpt.bottomIndex-2]
+        let cpt2 = this.bottomCptList[pigCpt.bottomIndex-1]
+        if(pigCpt.pigId != cpt1.pigId || pigCpt.pigId != cpt2.pigId){
             moveRight()
             this.checkLose()
             return
         }
-        crushCpt.curState = PigState.Removed
+        pigCpt.curState = PigState.Removed
         cpt1.curState = PigState.Removed
         cpt2.curState = PigState.Removed
         TimeSystem.scheduleOnce("checkFinish", this.flyTime+1, ()=>{
             this.checkFinishGame()
         })
-        cc.tween(this.levelNode)
+        cc.tween(this.node)
             .delay(this.flyTime)
             .call(()=>{
                 //SoundMgr.playSound("yangremove")
                 this.composeAnim(cpt1)
                 this.composeAnim(cpt2)
-                this.composeAnim(crushCpt)
+                this.composeAnim(pigCpt)
             })
             .start()
-        this.bottomCptList.splice(crushCpt.bottomIndex-2, 3)
+        this.bottomCptList.splice(pigCpt.bottomIndex-2, 3)
         for(let i = 0; i < moveList.length; i++){
             let cpt = moveList[i]
             cpt.bottomIndex = cpt.bottomIndex + 1
@@ -475,8 +509,8 @@ export default class GameComponent extends cc.Component {
         }
     }
 
-    flyToBottom(crushCpt){
-        this.resetMap[crushCpt.resetIndex] = false
+    flyToBottom(pigCpt){
+        this.resetMap[pigCpt.resetIndex] = false
         let moveList = []
         let insertIndex = -1
         if(this.bottomCptList.length <= 1){
@@ -485,7 +519,7 @@ export default class GameComponent extends cc.Component {
             for(let i = 0; i < this.bottomCptList.length; i++){
                 if(insertIndex != -1){
                     moveList.push(this.bottomCptList[i])
-                }else if(this.bottomCptList[i].crushId == crushCpt.crushId && (!this.bottomCptList[i+1] || this.bottomCptList[i+1].crushId != crushCpt.crushId)){
+                }else if(this.bottomCptList[i].pigId == pigCpt.pigId && (!this.bottomCptList[i+1] || this.bottomCptList[i+1].pigId != pigCpt.pigId)){
                     insertIndex = i+1
                 }
             }
@@ -493,16 +527,16 @@ export default class GameComponent extends cc.Component {
                 insertIndex = this.bottomCptList.length
             }
         }
-        crushCpt.curState = PigState.InBottom
-        this.moveCptList.push(crushCpt)
-        crushCpt.bottomIndex = insertIndex
-        this.bottomCptList.splice(insertIndex, 0, crushCpt)
-        let targetNode = this.bottomPosList[crushCpt.bottomIndex]
+        pigCpt.curState = PigState.InBottom
+        this.moveCptList.push(pigCpt)
+        pigCpt.bottomIndex = insertIndex
+        this.bottomCptList.splice(insertIndex, 0, pigCpt)
+        let targetNode = this.bottomPosList[pigCpt.bottomIndex]
         //this.isPlayAnim = true
         
-        this.checkRemoveItems(crushCpt, moveList)
-        cc.Tween.stopAllByTarget(crushCpt.node)
-        cc.tween(crushCpt.node)
+        this.checkRemoveItems(pigCpt, moveList)
+        cc.Tween.stopAllByTarget(pigCpt.node)
+        cc.tween(pigCpt.node)
             .to(this.flyTime, { position: cc.v2(targetNode.x, targetNode.y) })
             .call(()=>{
                 //this.isPlayAnim = false
