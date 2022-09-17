@@ -16,17 +16,6 @@ export enum PigState{
 
 @ccclass
 export default class PigComponent extends cc.Component {
-    pigId: Number = 0;
-    overPigList: PigComponent[] = [];
-    maskNode = null
-    index = 0
-    bottomIndex = 0
-    isRemove = false
-    startX = 0
-    startY = 0
-    curState = PigState.InList
-    resetIndex = -1
-
     onLoad () {
     }
     // update (dt) {}
