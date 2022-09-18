@@ -8,6 +8,7 @@
 import GameLayer from "./GameLayer";
 import PigComponent, { PigState } from "./PigComponent";
 import PopLayer, { PopType } from "./PopLayer";
+import ResultLayer from "./ResultLayer";
 import { ToolSystem } from "./ToolSystem";
 
 const {ccclass, property} = cc._decorator;
@@ -55,6 +56,7 @@ export default class GameComponent extends cc.Component {
         this.hs3Map = {}
         this.isPlayAnim = false
         this.initMask()
+        this.node.getChildByName("uiRoot").active = true
         this.sceneAnim = this.node.getChildByName("anim")
         this.sceneAnim.active = false
         let posList = this.node.getChildByName("posList")
@@ -259,7 +261,7 @@ export default class GameComponent extends cc.Component {
             this.setUpList(pigCpt)
         }
         this.refreshMask()
-        this.playMoveInAnim(pigRoot, 1)
+        this.playMoveIn(pigRoot, 1)
 
     }
 
@@ -297,7 +299,7 @@ export default class GameComponent extends cc.Component {
         return n
     }
 
-    playMoveInAnim(pigRoot,delayTime = 0){
+    playMoveIn(pigRoot,delayTime = 0){
         pigRoot.y = 1000
         cc.tween(pigRoot)
             .delay(delayTime)
@@ -305,7 +307,7 @@ export default class GameComponent extends cc.Component {
             .start()
     }
 
-    initRandomLevel(pigRoot){
+    initLevel2(pigRoot){
         pigRoot.active = true
         this.pigCptList = []
         this.slotPigList = []
@@ -352,7 +354,7 @@ export default class GameComponent extends cc.Component {
         }
         console.log("this.pigCptList.length=",this.pigCptList.length)
         this.refreshMask()
-        this.playMoveInAnim(pigRoot)
+        this.playMoveIn(pigRoot)
     }
 
     setUpList(cpt){
@@ -426,32 +428,14 @@ export default class GameComponent extends cc.Component {
         })
     }
 
-    playSceneAnim(callBack){
-        this.sceneAnim.x = 1334
-        this.sceneAnim.active = true
-        cc.tween(this.sceneAnim)
-            .to(0.5, { x: 0 }, { easing: 'backOut' })
-            .delay(1)
-            .to(0.5, { x: -1334 }, { easing: 'backOut' })
-            .call(()=>{
-                this.sceneAnim.active = false
-                if(callBack){
-                    callBack()
-                }
-            })
-            .start()
-    }
-
     checkFinishGame(){
         if(this.pigCptList.length == 0){
             let pigList2 = this.node.getChildByName("pigList2")
             if(pigList2.active){
-                //GameSystem.win()
+                ResultLayer.show(true)
             }else{
                 this.node.getChildByName("pigList1").active = false
-                this.playSceneAnim(()=>{
-                    this.initRandomLevel(pigList2)
-                })
+                this.initLevel2(pigList2)
             }
         }
     }
@@ -459,7 +443,7 @@ export default class GameComponent extends cc.Component {
     checkLose(){
         if(this.slotPigList.length >= this.slotNum){
             if(GameComponent.Inst.useBack3Num > 0){
-                ToolSystem.showTip("上移道具只能使用一次")
+                ResultLayer.show(false)
                 return
             }
             if(GameComponent.Inst.back3Num > 0){
