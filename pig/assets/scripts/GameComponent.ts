@@ -278,7 +278,7 @@ export default class GameComponent extends cc.Component {
             this.setUpList(pigCpt)
         }
         this.refreshMask()
-        this.playMoveIn(pigRoot, 1)
+        this.playMoveIn(pigRoot)
 
     }
 
@@ -316,8 +316,24 @@ export default class GameComponent extends cc.Component {
         return n
     }
 
-    playMoveIn(pigRoot,delayTime = 0){
-        pigRoot.y = 1000
+    playMoveIn(pigRoot){
+        for (let i = 0; i < this.pigCptList.length; i++) {
+            let pigNode = this.pigCptList[i].node
+            let endY = pigNode.y
+            pigNode.y = pigNode.y + 1000
+            let delayTime = 1
+            if(i >= 6){
+                delayTime = 1.2
+            }
+            cc.tween(pigNode)
+                .delay(delayTime)
+                .to(0.3, { y: endY })
+                .start()
+        }
+    }
+
+    playMoveLeft(pigRoot,delayTime = 0){
+        pigRoot.x = 1000
         cc.tween(pigRoot)
             .delay(delayTime)
             .to(1, { position: cc.v2(0, 0) }, { easing: 'backOut' })
@@ -373,7 +389,7 @@ export default class GameComponent extends cc.Component {
         }
         console.log("this.pigCptList.length=",this.pigCptList.length)
         this.refreshMask()
-        this.playMoveIn(this.randomLevel)
+        this.playMoveLeft(this.randomLevel)
     }
 
     setUpList(cpt){
