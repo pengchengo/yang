@@ -89,21 +89,19 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_custom": true,
-    "_file": {
-      "__uuid__": "b2687ac4-099e-403c-a192-ff477686f4f5"
-    },
+    "_file": null,
     "_spriteFrame": {
-      "__uuid__": "5660f1eb-30d6-4e31-a30c-df61afc0ae16"
+      "__uuid__": "6c8cee8f-d404-40d9-957e-805811e70548"
     },
     "_texture": null,
     "_stopped": true,
     "playOnLoad": true,
     "autoRemoveOnFinish": false,
-    "totalParticles": 17,
+    "totalParticles": 8,
     "duration": 0.1,
     "emissionRate": 999.999985098839,
-    "life": 0.35,
-    "lifeVar": 0.4,
+    "life": 0.2,
+    "lifeVar": 0.45,
     "_startColor": {
       "__type__": "cc.Color",
       "r": 255,
@@ -132,7 +130,7 @@
       "b": 0,
       "a": 0
     },
-    "angle": 360,
+    "angle": 0,
     "angleVar": 360,
     "startSize": 50,
     "startSizeVar": 0,
