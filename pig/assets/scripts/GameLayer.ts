@@ -36,6 +36,7 @@ export default class GameLayer extends cc.Component {
     }
 
     public onClickBtn1(){
+        ToolSystem.playEffect("click")
         if(GameComponent.Inst.back1Num > 0){
             if(!GameComponent.Inst.canUseOne()){
                 ToolSystem.showTip("当前不可使用回退道具")
@@ -53,6 +54,7 @@ export default class GameLayer extends cc.Component {
     }
 
     public onClickBtn3(){
+        ToolSystem.playEffect("click")
         if(GameComponent.Inst.useBack3Num > 0){
             ToolSystem.showTip("上移道具只能使用一次")
             return
@@ -74,6 +76,7 @@ export default class GameLayer extends cc.Component {
     }
 
     public onClickBtnRefresh(){
+        ToolSystem.playEffect("click")
         if(GameComponent.Inst.refreshNum > 0){
             GameComponent.Inst.refreshNum = GameComponent.Inst.refreshNum - 1
             GameComponent.Inst.onClickBtnRefresh()
@@ -87,6 +90,7 @@ export default class GameLayer extends cc.Component {
     }
 
     public onClickSetting(){
+        ToolSystem.playEffect("click")
         SettingLayer.show()
     }
 

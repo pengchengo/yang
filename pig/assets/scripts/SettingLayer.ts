@@ -51,11 +51,13 @@ export default class SettingLayer extends cc.Component {
     }
 
     onClickEffect(){
+        ToolSystem.playEffect("click")
         ToolSystem.changeSound()
         this.refreshBtn()
     }
 
     onClickMusic(){
+        ToolSystem.playEffect("click")
         if(ToolSystem.hasMusic()){
             ToolSystem.changeMusic()
             ToolSystem.stopMusic()
@@ -67,10 +69,12 @@ export default class SettingLayer extends cc.Component {
     }
 
     onClickClose(){
+        ToolSystem.playEffect("click")
         this.hide()
     }
 
     onClickRestart(){
+        ToolSystem.playEffect("click")
         this.hide()
         GameComponent.Inst.restartLevel()
     }

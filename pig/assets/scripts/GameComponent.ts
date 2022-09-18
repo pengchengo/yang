@@ -470,6 +470,7 @@ export default class GameComponent extends cc.Component {
                 this.pigCptList.splice(maxI, 1)
                 this.MovetoSlot(maxCpt)
                 this.refreshMask()
+                ToolSystem.playEffect("click")
             }
         })
         touchBg.on(cc.Node.EventType.TOUCH_MOVE, (evt)=>{
@@ -518,6 +519,7 @@ export default class GameComponent extends cc.Component {
     }
 
     disappearEffect(cpt){
+        ToolSystem.playEffect("compose")
         /*let effect = this.effectList[cpt.bottomIndex]
         effect.active = true
         effect.getComponent(cc.ParticleSystem).resetSystem();
