@@ -1,7 +1,53 @@
 import GameComponent from "./GameComponent"
 
 export class _ToolSystem {
+    cancelMusicKey = "cancelMusicKey"
+    cancelSoundKey = "cancelSoundKey"
+    cancelMusic = false
+    cancelSound = false
+
     scheduleMap = {}
+
+    init(){
+        this.cancelMusic = cc.sys.localStorage.getItem(this.cancelMusicKey)
+        this.cancelSound = cc.sys.localStorage.getItem(this.cancelSoundKey)
+    }
+
+    hasMusic(){
+        if(!this.cancelMusic){
+            return true
+        }else{
+            return false
+        }
+    }
+
+    changeMusic(){
+        if(this.cancelMusic){
+            this.cancelMusic = false
+            cc.sys.localStorage.setItem(this.cancelMusicKey, false)
+        }else{
+            this.cancelMusic = true
+            cc.sys.localStorage.setItem(this.cancelMusicKey, true)
+        }
+    }
+
+    hasSound(){
+        if(!this.cancelSound){
+            return true
+        }else{
+            return false
+        }
+    }
+
+    changeSound(){
+        if(this.cancelSound){
+            this.cancelSound = false
+            cc.sys.localStorage.setItem(this.cancelSoundKey, false)
+        }else{
+            this.cancelSound = true
+            cc.sys.localStorage.setItem(this.cancelSoundKey, true)
+        }
+    }
 
     scheduleOnce(key, time, callBack){
         let info = {} as any
@@ -30,20 +76,6 @@ export class _ToolSystem {
         }
     }
 
-    getRandomNum(Min, Max) {
-        var Range = Max - Min;
-        var Rand = Math.random();
-        return(Min + Math.round(Rand * Range));
-    }
-
-    getMapNum(map){
-        let num = 0
-        for(let k in map){
-            num++
-        }
-        return num
-    }
-
     showTip(content){
         let tipCom = cc.instantiate(GameComponent.Inst.node.getChildByName("tipUI"))
         tipCom.active = true
@@ -55,21 +87,6 @@ export class _ToolSystem {
             .by(1,{y:400})
             .removeSelf()
             .start()
-    }
-
-    lerp(a, b, w) {
-        return a + w*(b-a);
-    }
-
-    getRandomFromArr(arr: Array<any>) {//数组随机取结果
-        return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    
-    fixLabel(label, width, min = 1){
-        let scale = Math.min(min, width/(label.actualWidth))
-        label.scaleX = scale
-        label.scaleY = scale
     }
 
     shuffle(array) {
@@ -84,14 +101,6 @@ export class _ToolSystem {
         return array;
     }
 
-    isPad(){
-        if(cc.winSize.width/cc.winSize.height >= 0.75){
-            return true
-        }else{
-            return false
-        }
-    }
-
     isInNode(node, touchPos){
         let point = node.convertToNodeSpaceAR(touchPos)
         if(point.x > -node.width/2 && point.x < node.width/2 && point.y > -node.height/2 && point.y < node.height/2){
@@ -99,6 +108,28 @@ export class _ToolSystem {
         }else{
             return false
         }
+    }
+
+    playMusic(){
+        if(!this.hasMusic()){
+            return
+        }
+        cc.resources.load("music/bgm", cc.AudioClip, (err, audio: cc.AudioClip) => {
+            cc.audioEngine.playMusic(audio, true)
+        })
+    }
+
+    stopMusic(){
+        cc.audioEngine.stopMusic()
+    }
+
+    playEffect(name){
+        if(!this.hasSound()){
+            return
+        }
+        cc.resources.load("music/"+name, cc.AudioClip, (err, audio: cc.AudioClip) => {
+            cc.audioEngine.playEffect(audio, false)
+        })
     }
 }
 

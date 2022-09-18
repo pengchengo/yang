@@ -45,6 +45,8 @@ export default class GameComponent extends cc.Component {
     // onLoad () {}
 
     start () {
+        ToolSystem.init()
+        ToolSystem.playMusic()
         GameComponent.Inst = this
         this.node = this.node
         this.restartLevel()
@@ -148,7 +150,7 @@ export default class GameComponent extends cc.Component {
     refreshMk(cpt){
         for(let i = 0; i < cpt.upPigList.length; i++){
             let overCpt = cpt.upPigList[i]
-            if(overCpt.curState == PigState.InList){
+            if(overCpt.curState == PigState.CanMove){
                 return true
             }
             if(this.refreshMk(overCpt)){
@@ -169,7 +171,7 @@ export default class GameComponent extends cc.Component {
         }
     }
 
-    getBackEmptyPos(){
+    getEmptyPos(){
         for(let i = 1; i <= 3; i++){
             if(!this.hs3Map[i]){
                 return i
@@ -182,7 +184,7 @@ export default class GameComponent extends cc.Component {
         if(this.slotPigList.length <= 0){
             return false
         }
-        if(this.getBackEmptyPos()){
+        if(this.getEmptyPos()){
             return true
         }else{
             return false
@@ -195,12 +197,12 @@ export default class GameComponent extends cc.Component {
         for(let i = 3; i >= 1; i--){
             let cpt = this.slotPigList[0]
             if(cpt){
-                let resetPos = this.getBackEmptyPos()
+                let resetPos = this.getEmptyPos()
                 if(!resetPos){
                     break
                 }
                 this.slotPigList.splice(0, 1)
-                cpt.curState = PigState.Reset
+                cpt.curState = PigState.MoveUp
                 cpt.resetIndex = resetPos
                 this.hs3Map[cpt.resetIndex] = true
                 let posNode = posList.getChildByName("resetpos"+resetPos)
@@ -229,7 +231,7 @@ export default class GameComponent extends cc.Component {
             return false
         }
         let lastCpt = this.hsCptList[this.hsCptList.length-1]
-        if(lastCpt.curState == PigState.Removed){
+        if(lastCpt.curState == PigState.IsDestroyed){
             return false
         }
         return true
@@ -240,7 +242,7 @@ export default class GameComponent extends cc.Component {
             return false
         }
         let lastCpt = this.hsCptList[this.hsCptList.length-1]
-        if(lastCpt.curState == PigState.Removed){
+        if(lastCpt.curState == PigState.IsDestroyed){
             return false
         }
         return true
@@ -250,12 +252,12 @@ export default class GameComponent extends cc.Component {
             return
         }
         let lastCpt = this.hsCptList[this.hsCptList.length-1]
-        if(lastCpt.curState == PigState.Removed){
+        if(lastCpt.curState == PigState.IsDestroyed){
             return
         }
         lastCpt.node.x = lastCpt.startX
         lastCpt.node.y = lastCpt.startY
-        lastCpt.curState = PigState.InList
+        lastCpt.curState = PigState.CanMove
         for(let i = lastCpt.bottomIndex+1; i < this.slotPigList.length; i++){
             let cpt = this.slotPigList[i]
             cpt.bottomIndex = cpt.bottomIndex - 1
@@ -301,7 +303,7 @@ export default class GameComponent extends cc.Component {
     setPig(cpt, id, index){
         cpt.startX = cpt.node.x
         cpt.startY = cpt.node.y
-        cpt.curState = PigState.InList
+        cpt.curState = PigState.CanMove
         cpt.index = index
         cpt.node.zIndex = index
         cpt.zIndex = index
@@ -466,7 +468,7 @@ export default class GameComponent extends cc.Component {
             if(maxCpt){
                 //SoundMgr.playSound("yangclick")
                 this.pigCptList.splice(maxI, 1)
-                this.flyToBottom(maxCpt)
+                this.MovetoSlot(maxCpt)
                 this.refreshMask()
             }
         })
@@ -477,7 +479,7 @@ export default class GameComponent extends cc.Component {
         })
     }
 
-    checkFinishGame(){
+    findWin(){
         if(this.pigCptList.length == 0){
             if(this.randomLevel){
                 ResultLayer.show(true)
@@ -488,7 +490,7 @@ export default class GameComponent extends cc.Component {
         }
     }
 
-    checkLose(){
+    findLose(){
         if(this.slotPigList.length >= this.slotNum){
             if(GameComponent.Inst.useBack3Num > 0){
                 ResultLayer.show(false)
@@ -515,7 +517,7 @@ export default class GameComponent extends cc.Component {
         }
     }
 
-    composeAnim(cpt){
+    disappearEffect(cpt){
         /*let effect = this.effectList[cpt.bottomIndex]
         effect.active = true
         effect.getComponent(cc.ParticleSystem).resetSystem();
@@ -547,29 +549,29 @@ export default class GameComponent extends cc.Component {
         }
         if(pigCpt.bottomIndex < 2){
             moveRight()
-            this.checkLose()
+            this.findLose()
             return
         }
         let cpt1 = this.slotPigList[pigCpt.bottomIndex-2]
         let cpt2 = this.slotPigList[pigCpt.bottomIndex-1]
         if(pigCpt.pigId != cpt1.pigId || pigCpt.pigId != cpt2.pigId){
             moveRight()
-            this.checkLose()
+            this.findLose()
             return
         }
-        pigCpt.curState = PigState.Removed
-        cpt1.curState = PigState.Removed
-        cpt2.curState = PigState.Removed
+        pigCpt.curState = PigState.IsDestroyed
+        cpt1.curState = PigState.IsDestroyed
+        cpt2.curState = PigState.IsDestroyed
         ToolSystem.scheduleOnce("checkFinish", this.fnt+1, ()=>{
-            this.checkFinishGame()
+            this.findWin()
         })
         cc.tween(this.node)
             .delay(this.fnt)
             .call(()=>{
                 //SoundMgr.playSound("yangremove")
-                this.composeAnim(cpt1)
-                this.composeAnim(cpt2)
-                this.composeAnim(pigCpt)
+                this.disappearEffect(cpt1)
+                this.disappearEffect(cpt2)
+                this.disappearEffect(pigCpt)
             })
             .start()
         this.slotPigList.splice(pigCpt.bottomIndex-2, 3)
@@ -587,7 +589,7 @@ export default class GameComponent extends cc.Component {
         }
     }
 
-    flyToBottom(pigCpt){
+    MovetoSlot(pigCpt){
         this.hs3Map[pigCpt.resetIndex] = false
         let moveList = []
         let insertIndex = -1
@@ -605,7 +607,7 @@ export default class GameComponent extends cc.Component {
                 insertIndex = this.slotPigList.length
             }
         }
-        pigCpt.curState = PigState.InBottom
+        pigCpt.curState = PigState.InSlot
         this.hsCptList.push(pigCpt)
         pigCpt.bottomIndex = insertIndex
         this.slotPigList.splice(insertIndex, 0, pigCpt)
@@ -617,20 +619,7 @@ export default class GameComponent extends cc.Component {
         cc.tween(pigCpt.node)
             .to(this.fnt, { position: cc.v2(targetNode.x, targetNode.y) })
             .call(()=>{
-                //this.isPlayAnim = false
-                
             })
             .start()
-        /*for(let i = 0; i < moveList.length; i++){
-            let cpt = moveList[i]
-            cpt.bottomIndex = cpt.bottomIndex + 1
-            let tPos = this.slotPosList[cpt.bottomIndex]
-            cc.Tween.stopAllByTarget(cpt.node)
-            cc.tween(cpt.node)
-                .to(this.fnt, { position: cc.v2(tPos.x, tPos.y) })
-                .start()
-        }*/
     }
-    
-    // update (dt) {}
 }

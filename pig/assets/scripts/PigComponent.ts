@@ -8,10 +8,10 @@
 const {ccclass, property} = cc._decorator;
 
 export enum PigState{
-    InList = 1,
-    InBottom = 2,
-    Reset = 3,
-    Removed = 4
+    CanMove = 1,
+    InSlot = 2,
+    MoveUp = 3,
+    IsDestroyed = 4
 }
 
 @ccclass

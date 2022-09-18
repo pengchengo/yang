@@ -6,6 +6,7 @@
 //  - https://docs.cocos.com/creator/2.4/manual/en/scripting/life-cycle-callbacks.html
 
 import GameComponent from "./GameComponent";
+import { ToolSystem } from "./ToolSystem";
 
 const {ccclass, property} = cc._decorator;
 
@@ -28,6 +29,7 @@ export default class SettingLayer extends cc.Component {
     show(){
         GameComponent.showMask()
         this.node.active = true
+        this.refreshBtn()
     }
 
     hide(){
@@ -35,12 +37,33 @@ export default class SettingLayer extends cc.Component {
         this.node.active = false
     }
 
+    refreshBtn(){
+        if(ToolSystem.hasMusic()){
+            this.node.getChildByName("btnMusic").getChildByName("open").active = true
+        }else{
+            this.node.getChildByName("btnMusic").getChildByName("open").active = false
+        }
+        if(ToolSystem.hasSound()){
+            this.node.getChildByName("btnSound").getChildByName("open").active = true
+        }else{
+            this.node.getChildByName("btnSound").getChildByName("open").active = false
+        }
+    }
+
     onClickEffect(){
-        this.hide()
+        ToolSystem.changeSound()
+        this.refreshBtn()
     }
 
     onClickMusic(){
-        this.hide()
+        if(ToolSystem.hasMusic()){
+            ToolSystem.changeMusic()
+            ToolSystem.stopMusic()
+        }else{
+            ToolSystem.changeMusic()
+            ToolSystem.playMusic()
+        }
+        this.refreshBtn()
     }
 
     onClickClose(){
@@ -49,6 +72,7 @@ export default class SettingLayer extends cc.Component {
 
     onClickRestart(){
         this.hide()
+        GameComponent.Inst.restartLevel()
     }
     // update (dt) {}
 }
