@@ -35,6 +35,20 @@ export default class PopLayer extends cc.Component {
         GameComponent.showMask()
         this.info = info
         this.node.active = true
+        let type = info.type
+        this.node.getChildByName("back1").active = false
+        this.node.getChildByName("back3").active = false
+        this.node.getChildByName("refresh").active = false
+        this.node.getChildByName("revive").active = false
+        if(type == PopType.Back3){
+            this.node.getChildByName("back3").active = true
+        }else if(type == PopType.Back1){
+            this.node.getChildByName("back1").active = true
+        }else if(type == PopType.Refresh){
+            this.node.getChildByName("refresh").active = true
+        }else if(type == PopType.Revive){
+            this.node.getChildByName("revive").active = true
+        }
     }
 
     hide(){

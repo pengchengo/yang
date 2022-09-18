@@ -5,10 +5,10 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/2.4/manual/en/scripting/life-cycle-callbacks.html
 
+import GameLayer from "./GameLayer";
 import PigComponent, { PigState } from "./PigComponent";
-import PopLayer from "./PopLayer";
-import { TimeSystem } from "./TimeSystem";
-import { UtilsSystem } from "./UtilsSystem";
+import PopLayer, { PopType } from "./PopLayer";
+import { ToolSystem } from "./ToolSystem";
 
 const {ccclass, property} = cc._decorator;
 
@@ -36,6 +36,7 @@ export default class GameComponent extends cc.Component {
     back3Num = 0
     back1Num = 0
     refreshNum = 0
+    useBack3Num = 0
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -48,6 +49,7 @@ export default class GameComponent extends cc.Component {
         this.back3Num = 0
         this.back1Num = 0
         this.refreshNum = 0
+        this.useBack3Num = 0
         this.slotPosList = []
         this.effectList = []
         this.hs3Map = {}
@@ -105,7 +107,7 @@ export default class GameComponent extends cc.Component {
     }
 
     update(dt){
-        TimeSystem.update(dt)
+        ToolSystem.update(dt)
     }
 
     registBtn(){
@@ -136,7 +138,7 @@ export default class GameComponent extends cc.Component {
     }
 
     getBackEmptyPos(){
-        for(let i = 1; i <= 9; i++){
+        for(let i = 1; i <= 3; i++){
             if(!this.hs3Map[i]){
                 return i
             }
@@ -144,7 +146,10 @@ export default class GameComponent extends cc.Component {
         return 0
     }
 
-    canBackThree(){
+    canBack3(){
+        if(this.slotPigList.length <= 0){
+            return false
+        }
         if(this.getBackEmptyPos()){
             return true
         }else{
@@ -153,6 +158,7 @@ export default class GameComponent extends cc.Component {
     }
 
     backThree(){
+        this.useBack3Num = this.useBack3Num + 1
         let posList = this.node.getChildByName("posList")
         for(let i = 3; i >= 1; i--){
             let cpt = this.slotPigList[0]
@@ -197,8 +203,18 @@ export default class GameComponent extends cc.Component {
         return true
     }
 
-    backOne(){
+    canUseOne(){
         if(this.hsCptList.length <= 0){
+            return false
+        }
+        let lastCpt = this.hsCptList[this.hsCptList.length-1]
+        if(lastCpt.curState == PigState.Removed){
+            return false
+        }
+        return true
+    }
+    backOne(){
+        if(!this.canUseOne()){
             return
         }
         let lastCpt = this.hsCptList[this.hsCptList.length-1]
@@ -248,6 +264,8 @@ export default class GameComponent extends cc.Component {
     }
 
     setPig(cpt, id, index){
+        cpt.startX = cpt.node.x
+        cpt.startY = cpt.node.y
         cpt.curState = PigState.InList
         cpt.index = index
         cpt.node.zIndex = index
@@ -296,7 +314,7 @@ export default class GameComponent extends cc.Component {
         for(let i = 1; i <= 14; i++){
             iconList.push(i)
         }
-        UtilsSystem.shuffle(iconList)
+        ToolSystem.shuffle(iconList)
         let itemIdList = []
         for(let i = 0; i < iconList.length; i++){
             if(i < 10){
@@ -309,7 +327,7 @@ export default class GameComponent extends cc.Component {
                 }
             }
         }
-        UtilsSystem.shuffle(itemIdList)
+        ToolSystem.shuffle(itemIdList)
         
         
         let index = 0
@@ -386,7 +404,7 @@ export default class GameComponent extends cc.Component {
             let maxZIndex = -1
             for(let i = 0; i < this.pigCptList.length; i++){
                 let cpt = this.pigCptList[i]
-                if (!this.refreshMk(cpt) && UtilsSystem.checkTouchNode(cpt.icon, touchBeginPos)) {
+                if (!this.refreshMk(cpt) && ToolSystem.isInNode(cpt.icon, touchBeginPos)) {
                     if(cpt.zIndex > maxZIndex){
                         maxCpt = cpt
                         maxI = i
@@ -440,7 +458,22 @@ export default class GameComponent extends cc.Component {
 
     checkLose(){
         if(this.slotPigList.length >= this.slotNum){
-            if(!this.canBackThree()){
+            if(GameComponent.Inst.useBack3Num > 0){
+                ToolSystem.showTip("上移道具只能使用一次")
+                return
+            }
+            if(GameComponent.Inst.back3Num > 0){
+                GameComponent.Inst.back3Num = GameComponent.Inst.back3Num - 1
+                GameComponent.Inst.backThree()
+                GameLayer.Inst.refreshBtn()
+            }else{
+                PopLayer.show({type:PopType.Revive, getCallBack:()=>{
+                    GameComponent.Inst.backThree()
+                    GameLayer.Inst.refreshBtn()
+                }})
+            }
+            
+            if(!this.canBack3()){
                 //GameSystem.lose()
                 //GameSystem.loseAnimList = [this.node.getChildByName("level2")]
                 //GameSystem.loseAnim()
@@ -495,7 +528,7 @@ export default class GameComponent extends cc.Component {
         pigCpt.curState = PigState.Removed
         cpt1.curState = PigState.Removed
         cpt2.curState = PigState.Removed
-        TimeSystem.scheduleOnce("checkFinish", this.fnt+1, ()=>{
+        ToolSystem.scheduleOnce("checkFinish", this.fnt+1, ()=>{
             this.checkFinishGame()
         })
         cc.tween(this.node)

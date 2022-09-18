@@ -8,6 +8,7 @@
 import GameComponent from "./GameComponent";
 import PopLayer, { PopType } from "./PopLayer";
 import SettingLayer from "./SettingLayer";
+import { ToolSystem } from "./ToolSystem";
 
 const {ccclass, property} = cc._decorator;
 
@@ -36,8 +37,13 @@ export default class GameLayer extends cc.Component {
 
     public onClickBtn1(){
         if(GameComponent.Inst.back1Num > 0){
+            if(!GameComponent.Inst.canUseOne()){
+                ToolSystem.showTip("当前不可使用回退道具")
+                return
+            }
             GameComponent.Inst.back1Num = GameComponent.Inst.back1Num - 1
             GameComponent.Inst.backOne()
+            this.refreshBtn()
         }else{
             PopLayer.show({type:PopType.Back1, getCallBack:()=>{
                 GameComponent.Inst.back1Num = GameComponent.Inst.back1Num + 1
@@ -47,9 +53,18 @@ export default class GameLayer extends cc.Component {
     }
 
     public onClickBtn3(){
+        if(GameComponent.Inst.useBack3Num > 0){
+            ToolSystem.showTip("上移道具只能使用一次")
+            return
+        }
         if(GameComponent.Inst.back3Num > 0){
+            if(!GameComponent.Inst.canBack3()){
+                ToolSystem.showTip("当前不可使用上移道具")
+                return
+            }
             GameComponent.Inst.back3Num = GameComponent.Inst.back3Num - 1
             GameComponent.Inst.backThree()
+            this.refreshBtn()
         }else{
             PopLayer.show({type:PopType.Back3, getCallBack:()=>{
                 GameComponent.Inst.back3Num = GameComponent.Inst.back3Num + 1
@@ -62,16 +77,13 @@ export default class GameLayer extends cc.Component {
         if(GameComponent.Inst.refreshNum > 0){
             GameComponent.Inst.refreshNum = GameComponent.Inst.refreshNum - 1
             GameComponent.Inst.onClickBtnRefresh()
+            this.refreshBtn()
         }else{
             PopLayer.show({type:PopType.Refresh, getCallBack:()=>{
                 GameComponent.Inst.refreshNum = GameComponent.Inst.refreshNum + 1
                 this.refreshBtn()
             }})
         }
-
-        PopLayer.show({type:PopType.Refresh, getCallBack:()=>{
-
-        }})
     }
 
     public onClickSetting(){
