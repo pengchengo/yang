@@ -17,7 +17,7 @@ const {ccclass, property} = cc._decorator;
 export default class GameComponent extends cc.Component {
     static Inst = null
     pigAtlas = null
-    pigCfg1 = [1,2,3,4,4,3,2,1,1,2,3,4]
+    pigCfg1 = [1,2,3,3,3,2,2,2,3,1,1,1,1,1,3,3,2,2]
     pigWidth = 90
     pigHeight = 100
     pigArea = 90*100
@@ -39,6 +39,7 @@ export default class GameComponent extends cc.Component {
     useBack3Num = 0
     firstLevel = null
     randomLevel = null
+    tipAnim = null
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -71,6 +72,8 @@ export default class GameComponent extends cc.Component {
         }
         this.initMask()
         this.node.getChildByName("uiRoot").active = true
+        this.tipAnim = this.node.getChildByName("tipAnim")
+        this.tipAnim.active = false
         let posList = this.node.getChildByName("posList")
         for (let i = 1; i <= this.slotNum; i++) {
             let item = posList.getChildByName("pos"+i)
@@ -341,7 +344,7 @@ export default class GameComponent extends cc.Component {
             let endY = pigNode.y
             pigNode.y = pigNode.y + 1000
             let delayTime = 1
-            if(i >= 6){
+            if(i >= 9){
                 delayTime = 1.2
             }
             cc.tween(pigNode)
@@ -351,7 +354,25 @@ export default class GameComponent extends cc.Component {
         }
     }
 
+    playSceneAnim(callBack?){
+        this.tipAnim.x = 1334
+        this.tipAnim.active = true
+        cc.tween(this.tipAnim)
+            .delay(1)
+            .to(0.5, { x: 0 }, { easing: 'backOut' })
+            .delay(1)
+            .to(0.5, { x: -1334 }, { easing: 'backOut' })
+            .call(()=>{
+                this.tipAnim.active = false
+                if(callBack){
+                    callBack()
+                }
+            })
+            .start()
+    }
+
     playMoveLeft(pigRoot,delayTime = 0){
+        this.playSceneAnim()
         pigRoot.x = 1000
         cc.tween(pigRoot)
             .delay(delayTime)
