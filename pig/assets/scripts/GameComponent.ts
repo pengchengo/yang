@@ -208,6 +208,7 @@ export default class GameComponent extends cc.Component {
                 let posNode = posList.getChildByName("resetpos"+resetPos)
                 cpt.node.x = posNode.x
                 cpt.node.y = posNode.y
+                cpt.node.zIndex = this.pigCptList.length+2
                 this.pigCptList.push(cpt)
                 for(let j = this.hsCptList.length-1; j >= 0; j--){
                     if(this.hsCptList[j] == cpt){
