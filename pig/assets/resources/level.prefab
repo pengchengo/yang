@@ -43044,7 +43044,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "bg",
+    "_name": "每日一关底板",
     "_objFlags": 0,
     "_parent": {
       "__id__": 1285
@@ -43062,15 +43062,15 @@
     "_opacity": 255,
     "_color": {
       "__type__": "cc.Color",
-      "r": 0,
-      "g": 0,
-      "b": 0,
+      "r": 255,
+      "g": 255,
+      "b": 255,
       "a": 255
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 400,
-      "height": 300
+      "width": 222,
+      "height": 60
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -43088,8 +43088,8 @@
         0,
         0,
         1,
-        1,
-        1,
+        2,
+        2.4,
         1
       ]
     },
@@ -43122,10 +43122,10 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "a23235d1-15db-4b95-8439-a2e005bfff91"
+      "__uuid__": "f0943d97-ded7-44ce-895a-e2aa4fadf1c5"
     },
     "_type": 0,
-    "_sizeMode": 0,
+    "_sizeMode": 1,
     "_fillType": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
@@ -43146,7 +43146,7 @@
     "asset": {
       "__id__": 0
     },
-    "fileId": "f0ekonRoJJELUpYAHiDeSI",
+    "fileId": "37PIjRLSBFYY0If1E2WXMx",
     "sync": false
   },
   {
