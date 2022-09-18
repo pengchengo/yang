@@ -17,7 +17,7 @@ const {ccclass, property} = cc._decorator;
 export default class GameComponent extends cc.Component {
     static Inst = null
     pigAtlas = null
-    pigCfg1 = [1,2,3,4,1,2,3,4,1,2,3,4]
+    pigCfg1 = [1,2,3,4,4,3,2,1,1,2,3,4]
     pigWidth = 90
     pigHeight = 100
     pigArea = 90*100
@@ -38,6 +38,8 @@ export default class GameComponent extends cc.Component {
     back1Num = 0
     refreshNum = 0
     useBack3Num = 0
+    firstLevel = null
+    randomLevel = null
 
     // LIFE-CYCLE CALLBACKS:
 
@@ -46,7 +48,10 @@ export default class GameComponent extends cc.Component {
     start () {
         GameComponent.Inst = this
         this.node = this.node
-
+        this.restartLevel()
+    }
+    
+    restartLevel(){
         this.back3Num = 0
         this.back1Num = 0
         this.refreshNum = 0
@@ -55,6 +60,14 @@ export default class GameComponent extends cc.Component {
         this.effectList = []
         this.hs3Map = {}
         this.isPlayAnim = false
+        if(this.firstLevel){
+            this.firstLevel.destroy()
+            this.firstLevel = null
+        }
+        if(this.randomLevel){
+            this.randomLevel.destroy()
+            this.randomLevel = null
+        }
         this.initMask()
         this.node.getChildByName("uiRoot").active = true
         this.sceneAnim = this.node.getChildByName("anim")
@@ -68,16 +81,17 @@ export default class GameComponent extends cc.Component {
             this.slotPosList.push(item)
         }
         let pigList1 = this.node.getChildByName("pigList1")
+        this.node.getChildByName("pigList1").active = false
         this.node.getChildByName("pigList2").active = false
         this.isPause = false
         
         cc.resources.load("pig",cc.SpriteAtlas,(err: Error, atlas:cc.SpriteAtlas)=>{
             this.pigAtlas = atlas
-            this.initPigList1(pigList1)
+            this.initPigList1()
             this.registTouch()
         })
     }
-    
+
     initMask(){
         this.maskLayer = this.node.getChildByName("uiRoot").getChildByName("maskLayer")
         this.maskLayer.active = false
@@ -239,8 +253,11 @@ export default class GameComponent extends cc.Component {
         this.refreshMask()
     }
 
-    initPigList1(pigRoot){
+    initPigList1(){
+        let pigRoot = cc.instantiate(this.node.getChildByName("pigList1"))
+        this.node.getChildByName("levelRoot").addChild(pigRoot)
         pigRoot.active = true
+        this.firstLevel = pigRoot
         this.pigCptList = []
         this.slotPigList = []
         this.hsCptList = []
@@ -307,8 +324,10 @@ export default class GameComponent extends cc.Component {
             .start()
     }
 
-    initLevel2(pigRoot){
-        pigRoot.active = true
+    initLevel2(){
+        this.randomLevel = cc.instantiate(this.node.getChildByName("pigList2"))
+        this.node.getChildByName("levelRoot").addChild(this.randomLevel)
+        this.randomLevel.active = true
         this.pigCptList = []
         this.slotPigList = []
         this.hsCptList = []
@@ -347,14 +366,14 @@ export default class GameComponent extends cc.Component {
                 }
             }
         }
-        checkNode(pigRoot)
+        checkNode(this.randomLevel)
         for (let i = 0; i < this.pigCptList.length; i++) {
             let pigCpt = this.pigCptList[i]
             this.setUpList(pigCpt)
         }
         console.log("this.pigCptList.length=",this.pigCptList.length)
         this.refreshMask()
-        this.playMoveIn(pigRoot)
+        this.playMoveIn(this.randomLevel)
     }
 
     setUpList(cpt){
@@ -430,12 +449,11 @@ export default class GameComponent extends cc.Component {
 
     checkFinishGame(){
         if(this.pigCptList.length == 0){
-            let pigList2 = this.node.getChildByName("pigList2")
-            if(pigList2.active){
+            if(this.randomLevel){
                 ResultLayer.show(true)
             }else{
                 this.node.getChildByName("pigList1").active = false
-                this.initLevel2(pigList2)
+                this.initLevel2()
             }
         }
     }

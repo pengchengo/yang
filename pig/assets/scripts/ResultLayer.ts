@@ -42,20 +42,9 @@ export default class ResultLayer extends cc.Component {
         this.node.active = false
     }
 
-    onClickEffect(){
-        this.hide()
-    }
-
-    onClickMusic(){
-        this.hide()
-    }
-
-    onClickClose(){
-        this.hide()
-    }
-
     onClickRestart(){
         this.hide()
+        GameComponent.Inst.restartLevel()
     }
     // update (dt) {}
 }
