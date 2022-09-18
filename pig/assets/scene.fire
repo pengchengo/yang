@@ -235,7 +235,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "touchBg",
+    "_name": "touch",
     "_objFlags": 0,
     "_parent": {
       "__id__": 2

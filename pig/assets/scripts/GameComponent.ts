@@ -87,7 +87,7 @@ export default class GameComponent extends cc.Component {
         cc.resources.load("pig",cc.SpriteAtlas,(err: Error, atlas:cc.SpriteAtlas)=>{
             this.pigAtlas = atlas
             this.initPigList1()
-            this.registTouch()
+            this.initTouch()
         })
     }
 
@@ -438,12 +438,16 @@ export default class GameComponent extends cc.Component {
         }
     }
 
-    registTouch(){
+    initTouch(){
         let touchBeginPos = null
         let beginX = 0
         let beginY = 0
         let curScene = cc.director.getScene();
-        let touchBg = curScene.getChildByName("Canvas").getChildByName("touchBg")
+        let touchBg = curScene.getChildByName("Canvas").getChildByName("touch")
+        touchBg.off(cc.Node.EventType.TOUCH_START)
+        touchBg.off(cc.Node.EventType.TOUCH_MOVE)
+        touchBg.off(cc.Node.EventType.TOUCH_END)
+        
         let selectList = []
         touchBg.on(cc.Node.EventType.TOUCH_START, (evt)=>{
             if(this.isPlayAnim){
