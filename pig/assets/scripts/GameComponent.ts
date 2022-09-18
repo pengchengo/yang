@@ -31,7 +31,6 @@ export default class GameComponent extends cc.Component {
     effectList = []
     isPlayAnim = false
     hsCptList = []
-    sceneAnim = null
     isPause = false
     maskLayer = null
     back3Num = 0
@@ -70,12 +69,10 @@ export default class GameComponent extends cc.Component {
         }
         this.initMask()
         this.node.getChildByName("uiRoot").active = true
-        this.sceneAnim = this.node.getChildByName("anim")
-        this.sceneAnim.active = false
         let posList = this.node.getChildByName("posList")
         for (let i = 1; i <= this.slotNum; i++) {
             let item = posList.getChildByName("pos"+i)
-            let effect = item.getChildByName("flash")
+            let effect = item.getChildByName("effect")
             effect.active = false
             this.effectList.push(effect)
             this.slotPosList.push(item)
@@ -119,7 +116,26 @@ export default class GameComponent extends cc.Component {
     }
 
     public onClickBtnRefresh(){
-
+        let pigIdList = []
+        for (let i = 0; i < this.pigCptList.length; i++) {
+            let pigCpt = this.pigCptList[i]
+            pigIdList.push(pigCpt.pigId)
+        }
+        ToolSystem.shuffle(pigIdList)
+        for (let i = 0; i < this.pigCptList.length; i++) {
+            let pigCpt = this.pigCptList[i]
+            pigCpt.pigId = pigIdList[i]
+            pigCpt.icon.destroy()
+            let name = ""
+            if(pigCpt.pigId < 10){
+                name = "1000" + pigCpt.pigId
+            }else{
+                name = "100" + pigCpt.pigId
+            }
+            let icon = this.maskCp(pigCpt.node, this.pigAtlas.getSpriteFrame(name), "icon")
+            icon.scale = 1
+            pigCpt.icon = icon
+        }
     }
 
     update(dt){
@@ -365,8 +381,6 @@ export default class GameComponent extends cc.Component {
             }
         }
         ToolSystem.shuffle(itemIdList)
-        
-        
         let index = 0
         let checkNode = (root)=>{
             //@ts-ignore
@@ -502,7 +516,7 @@ export default class GameComponent extends cc.Component {
     }
 
     composeAnim(cpt){
-        let effect = this.effectList[cpt.bottomIndex]
+        /*let effect = this.effectList[cpt.bottomIndex]
         effect.active = true
         effect.getComponent(cc.ParticleSystem).resetSystem();
         cc.tween(effect)
@@ -510,7 +524,7 @@ export default class GameComponent extends cc.Component {
             .call(()=>{
                 effect.active = false
             })
-            .start()
+            .start()*/
         cc.tween(cpt.node)
             .to(0.1, { scale: 0 })
             .call(()=>{
