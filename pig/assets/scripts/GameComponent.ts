@@ -546,7 +546,7 @@ export default class GameComponent extends cc.Component {
 
     disappearEffect(cpt){
         ToolSystem.playEffect("compose")
-        /*let effect = this.effectList[cpt.bottomIndex]
+        let effect = this.effectList[cpt.bottomIndex]
         effect.active = true
         effect.getComponent(cc.ParticleSystem).resetSystem();
         cc.tween(effect)
@@ -554,7 +554,7 @@ export default class GameComponent extends cc.Component {
             .call(()=>{
                 effect.active = false
             })
-            .start()*/
+            .start()
         cc.tween(cpt.node)
             .to(0.1, { scale: 0 })
             .call(()=>{
