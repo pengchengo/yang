@@ -405,24 +405,15 @@ export default class GameComponent extends cc.Component {
                 return
             }
             touchBeginPos = evt.getLocation();
-            let maxI = 0
-            let maxCpt = null
-            let maxZIndex = -1
             for(let i = 0; i < this.pigCptList.length; i++){
                 let cpt = this.pigCptList[i]
-                if (!this.refreshMk(cpt) && ToolSystem.isInNode(cpt.icon, touchBeginPos)) {
-                    if(cpt.zIndex > maxZIndex){
-                        maxCpt = cpt
-                        maxI = i
-                        maxZIndex = cpt.node.zIndex
-                    }
+                if (ToolSystem.isInNode(cpt.icon, touchBeginPos) && !this.refreshMk(cpt)) {
+                    this.pigCptList.splice(i, 1)
+                    this.MovetoSlot(cpt)
+                    this.refreshBlack()
+                    ToolSystem.playEffect("click")
+                    break
                 }
-            }
-            if(maxCpt){
-                this.pigCptList.splice(maxI, 1)
-                this.MovetoSlot(maxCpt)
-                this.refreshBlack()
-                ToolSystem.playEffect("click")
             }
         })
     }
