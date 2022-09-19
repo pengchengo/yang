@@ -29,9 +29,7 @@ export default class GameComponent extends cc.Component {
     slotPosList = []
     hs3Map = {}
     effectList = []
-    isPlayAnim = false
     hsCptList = []
-    isPause = false
     maskLayer = null
     back3Num = 0
     back1Num = 0
@@ -61,7 +59,6 @@ export default class GameComponent extends cc.Component {
         this.slotPosList = []
         this.effectList = []
         this.hs3Map = {}
-        this.isPlayAnim = false
         if(this.firstLevel){
             this.firstLevel.destroy()
             this.firstLevel = null
@@ -74,18 +71,16 @@ export default class GameComponent extends cc.Component {
         this.node.getChildByName("uiRoot").active = true
         this.tipAnim = this.node.getChildByName("tipAnim")
         this.tipAnim.active = false
-        let posList = this.node.getChildByName("posList")
+        let slotList = this.node.getChildByName("slotList")
         for (let i = 1; i <= this.slotNum; i++) {
-            let item = posList.getChildByName("pos"+i)
+            let item = slotList.getChildByName("s"+i)
             let effect = item.getChildByName("effect")
             effect.active = false
             this.effectList.push(effect)
             this.slotPosList.push(item)
         }
-        let pigList1 = this.node.getChildByName("pigList1")
         this.node.getChildByName("pigList1").active = false
         this.node.getChildByName("pigList2").active = false
-        this.isPause = false
         
         cc.resources.load("pig",cc.SpriteAtlas,(err: Error, atlas:cc.SpriteAtlas)=>{
             this.pigAtlas = atlas
@@ -98,7 +93,6 @@ export default class GameComponent extends cc.Component {
         this.maskLayer = this.node.getChildByName("uiRoot").getChildByName("maskLayer")
         this.maskLayer.active = false
         this.maskLayer.on(cc.Node.EventType.TOUCH_START, (evt)=>{
-            console.log("被mask遮挡")
         })
     }
 
@@ -147,23 +141,20 @@ export default class GameComponent extends cc.Component {
         ToolSystem.update(dt)
     }
 
-    registBtn(){
-    }
-
     refreshMk(cpt){
         for(let i = 0; i < cpt.upPigList.length; i++){
             let overCpt = cpt.upPigList[i]
             if(overCpt.curState == PigState.CanMove){
                 return true
             }
-            if(overCpt.curState == PigState.CanMove && this.refreshMk(overCpt)){
+            if(overCpt.node.active && overCpt.curState == PigState.CanMove && this.refreshMk(overCpt)){
                 return true
             }
         }
         return false
     }
 
-    refreshMask(){
+    refreshBlack(){
         for(let i = 0; i < this.pigCptList.length; i++){
             let cpt = this.pigCptList[i]
             if(this.refreshMk(cpt)){
@@ -183,20 +174,9 @@ export default class GameComponent extends cc.Component {
         return 0
     }
 
-    canBack3(){
-        if(this.slotPigList.length <= 0){
-            return false
-        }
-        if(this.getEmptyPos()){
-            return true
-        }else{
-            return false
-        }
-    }
-
     backThree(){
         this.useBack3Num = this.useBack3Num + 1
-        let posList = this.node.getChildByName("posList")
+        let slotList = this.node.getChildByName("slotList")
         for(let i = 3; i >= 1; i--){
             let cpt = this.slotPigList[0]
             if(cpt){
@@ -208,7 +188,7 @@ export default class GameComponent extends cc.Component {
                 cpt.curState = PigState.MoveUp
                 cpt.resetIndex = resetPos
                 this.hs3Map[cpt.resetIndex] = true
-                let posNode = posList.getChildByName("resetpos"+resetPos)
+                let posNode = this.node.getChildByName("b"+resetPos)
                 cpt.node.x = posNode.x
                 cpt.node.y = posNode.y
                 cpt.node.zIndex = this.pigCptList.length+2
@@ -230,27 +210,6 @@ export default class GameComponent extends cc.Component {
         }
     }
 
-    canBackOne(){
-        if(this.hsCptList.length <= 0){
-            return false
-        }
-        let lastCpt = this.hsCptList[this.hsCptList.length-1]
-        if(lastCpt.curState == PigState.IsDestroyed){
-            return false
-        }
-        return true
-    }
-
-    canUseOne(){
-        if(this.hsCptList.length <= 0){
-            return false
-        }
-        let lastCpt = this.hsCptList[this.hsCptList.length-1]
-        if(lastCpt.curState == PigState.IsDestroyed){
-            return false
-        }
-        return true
-    }
     backOne(){
         if(!this.canUseOne()){
             return
@@ -272,7 +231,7 @@ export default class GameComponent extends cc.Component {
         this.slotPigList.splice(lastCpt.bottomIndex, 1)
         this.pigCptList.push(lastCpt)
         this.hsCptList.pop()
-        this.refreshMask()
+        this.refreshBlack()
     }
 
     initPigList1(){
@@ -299,8 +258,20 @@ export default class GameComponent extends cc.Component {
             let pigCpt = this.pigCptList[i]
             this.setUpList(pigCpt)
         }
-        this.refreshMask()
-        this.playMoveIn(pigRoot)
+        this.refreshBlack()
+        for (let i = 0; i < this.pigCptList.length; i++) {
+            let pigNode = this.pigCptList[i].node
+            let endY = pigNode.y
+            pigNode.y = pigNode.y + 1000
+            let delayTime = 1
+            if(i >= 9){
+                delayTime = 1.2
+            }
+            cc.tween(pigNode)
+                .delay(delayTime)
+                .to(0.3, { y: endY })
+                .start()
+        }
 
     }
 
@@ -338,49 +309,7 @@ export default class GameComponent extends cc.Component {
         return n
     }
 
-    playMoveIn(pigRoot){
-        for (let i = 0; i < this.pigCptList.length; i++) {
-            let pigNode = this.pigCptList[i].node
-            let endY = pigNode.y
-            pigNode.y = pigNode.y + 1000
-            let delayTime = 1
-            if(i >= 9){
-                delayTime = 1.2
-            }
-            cc.tween(pigNode)
-                .delay(delayTime)
-                .to(0.3, { y: endY })
-                .start()
-        }
-    }
-
-    playSceneAnim(callBack?){
-        this.tipAnim.x = 1334
-        this.tipAnim.active = true
-        cc.tween(this.tipAnim)
-            .delay(1)
-            .to(0.5, { x: 0 }, { easing: 'backOut' })
-            .delay(1)
-            .to(0.5, { x: -1334 }, { easing: 'backOut' })
-            .call(()=>{
-                this.tipAnim.active = false
-                if(callBack){
-                    callBack()
-                }
-            })
-            .start()
-    }
-
-    playMoveLeft(pigRoot,delayTime = 0){
-        this.playSceneAnim()
-        pigRoot.x = 1000
-        cc.tween(pigRoot)
-            .delay(delayTime)
-            .to(1, { position: cc.v2(0, 0) }, { easing: 'backOut' })
-            .start()
-    }
-
-    initLevel2(){
+    initPigList2(){
         this.randomLevel = cc.instantiate(this.node.getChildByName("pigList2"))
         this.node.getChildByName("levelRoot").addChild(this.randomLevel)
         this.randomLevel.active = true
@@ -425,9 +354,23 @@ export default class GameComponent extends cc.Component {
             let pigCpt = this.pigCptList[i]
             this.setUpList(pigCpt)
         }
-        console.log("this.pigCptList.length=",this.pigCptList.length)
-        this.refreshMask()
-        this.playMoveLeft(this.randomLevel)
+        this.refreshBlack()
+        this.tipAnim.x = 1334
+        this.tipAnim.active = true
+        cc.tween(this.tipAnim)
+            .delay(1)
+            .to(0.5, { x: 0 }, { easing: 'backOut' })
+            .delay(1)
+            .to(0.5, { x: -1334 }, { easing: 'backOut' })
+            .call(()=>{
+                this.tipAnim.active = false
+            })
+            .start()
+        this.randomLevel.x = 1000
+        cc.tween(this.randomLevel)
+            .delay(0.1)
+            .to(1, { position: cc.v2(0, 0) }, { easing: 'backOut' })
+            .start()
     }
 
     setUpList(cpt){
@@ -441,19 +384,12 @@ export default class GameComponent extends cc.Component {
             if(otherCpt.zIndex > cpt.zIndex){
                 let bx1 = otherCpt.node.x
                 let by1 = otherCpt.node.y
-                var maxX,maxY,minX,minY
-                maxX = ax1+this.pigWidth >= bx1+this.pigWidth ? ax1+this.pigWidth : bx1+this.pigWidth
-                maxY = ay1+this.pigHeight >= by1+this.pigHeight ? ay1+this.pigHeight : by1+this.pigHeight
-                minX = ax1 <= bx1 ? ax1 : bx1
-                minY = ay1 <= by1 ? ay1 : by1
-                if(maxX - minX < this.pigWidth+this.pigWidth && maxY - minY < this.pigHeight+this.pigHeight){
-                    let bx2 = otherCpt.node.x + this.pigWidth
-                    let by2 = otherCpt.node.y + this.pigHeight
-                    const overlapWidth = Math.min(ax2, bx2) - Math.max(ax1, bx1), overlapHeight = Math.min(ay2, by2) - Math.max(ay1, by1);
-                    const overlapArea = Math.max(overlapWidth, 0) * Math.max(overlapHeight, 0);
-                    if(overlapArea > this.pigArea/6.5){
-                        cpt.upPigList.push(otherCpt)
-                    }
+                let bx2 = otherCpt.node.x + this.pigWidth
+                let by2 = otherCpt.node.y + this.pigHeight
+                const overlapWidth = Math.min(ax2, bx2) - Math.max(ax1, bx1), overlapHeight = Math.min(ay2, by2) - Math.max(ay1, by1);
+                const overlapArea = Math.max(overlapWidth, 0) * Math.max(overlapHeight, 0);
+                if(overlapArea > this.pigArea/8){
+                    cpt.upPigList.push(otherCpt)
                 }
             }
         }
@@ -461,19 +397,10 @@ export default class GameComponent extends cc.Component {
 
     initTouch(){
         let touchBeginPos = null
-        let beginX = 0
-        let beginY = 0
         let curScene = cc.director.getScene();
         let touchBg = curScene.getChildByName("Canvas").getChildByName("touch")
         touchBg.off(cc.Node.EventType.TOUCH_START)
-        touchBg.off(cc.Node.EventType.TOUCH_MOVE)
-        touchBg.off(cc.Node.EventType.TOUCH_END)
-        
-        let selectList = []
         touchBg.on(cc.Node.EventType.TOUCH_START, (evt)=>{
-            if(this.isPlayAnim){
-                return
-            }
             if(this.slotPigList.length >= this.slotNum){
                 return
             }
@@ -492,29 +419,12 @@ export default class GameComponent extends cc.Component {
                 }
             }
             if(maxCpt){
-                //SoundMgr.playSound("yangclick")
                 this.pigCptList.splice(maxI, 1)
                 this.MovetoSlot(maxCpt)
-                this.refreshMask()
+                this.refreshBlack()
                 ToolSystem.playEffect("click")
             }
         })
-        touchBg.on(cc.Node.EventType.TOUCH_MOVE, (evt)=>{
-        })
-        touchBg.on(cc.Node.EventType.TOUCH_END, (evt)=>{
-            
-        })
-    }
-
-    findWin(){
-        if(this.pigCptList.length == 0){
-            if(this.randomLevel){
-                ResultLayer.show(true)
-            }else{
-                this.node.getChildByName("pigList1").active = false
-                this.initLevel2()
-            }
-        }
     }
 
     findLose(){
@@ -533,15 +443,29 @@ export default class GameComponent extends cc.Component {
                     GameLayer.Inst.refreshBtn()
                 }})
             }
-            
-            if(!this.canBack3()){
-                //GameSystem.lose()
-                //GameSystem.loseAnimList = [this.node.getChildByName("level2")]
-                //GameSystem.loseAnim()
-            }else{
-                //SheepUI.showUI(SheepToolType.Revive)
-            }
         }
+    }
+
+    canBack3(){
+        if(this.slotPigList.length <= 0){
+            return false
+        }
+        if(this.getEmptyPos()){
+            return true
+        }else{
+            return false
+        }
+    }
+
+    canUseOne(){
+        if(this.hsCptList.length <= 0){
+            return false
+        }
+        let lastCpt = this.hsCptList[this.hsCptList.length-1]
+        if(lastCpt.curState == PigState.IsDestroyed){
+            return false
+        }
+        return true
     }
 
     disappearEffect(cpt){
@@ -591,7 +515,14 @@ export default class GameComponent extends cc.Component {
         cpt1.curState = PigState.IsDestroyed
         cpt2.curState = PigState.IsDestroyed
         ToolSystem.scheduleOnce("checkFinish", this.fnt+1, ()=>{
-            this.findWin()
+            if(this.pigCptList.length == 0){
+                if(this.randomLevel){
+                    ResultLayer.show(true)
+                }else{
+                    this.node.getChildByName("pigList1").active = false
+                    this.initPigList2()
+                }
+            }
         })
         cc.tween(this.node)
             .delay(this.fnt)
