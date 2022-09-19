@@ -156,7 +156,7 @@ export default class GameComponent extends cc.Component {
             if(overCpt.curState == PigState.CanMove){
                 return true
             }
-            if(this.refreshMk(overCpt)){
+            if(overCpt.curState == PigState.CanMove && this.refreshMk(overCpt)){
                 return true
             }
         }
