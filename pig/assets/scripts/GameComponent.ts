@@ -176,7 +176,6 @@ export default class GameComponent extends cc.Component {
 
     backThree(){
         this.useBack3Num = this.useBack3Num + 1
-        let slotList = this.node.getChildByName("slotList")
         for(let i = 3; i >= 1; i--){
             let cpt = this.slotPigList[0]
             if(cpt){
@@ -262,7 +261,7 @@ export default class GameComponent extends cc.Component {
         for (let i = 0; i < this.pigCptList.length; i++) {
             let pigNode = this.pigCptList[i].node
             let endY = pigNode.y
-            pigNode.y = pigNode.y + 1000
+            pigNode.y = pigNode.y + cc.winSize.height
             let delayTime = 1
             if(i >= 9){
                 delayTime = 1.2
@@ -296,8 +295,6 @@ export default class GameComponent extends cc.Component {
         let mk = this.maskCp(cpt.node, atlas.getSpriteFrame("mask"), "black")
         mk.zIndex = 2
         mk.scale = 1
-        //mk.opacity = 102
-        //mk.color = cc.Color.WHITE
         cpt.mk = mk
     }
 
@@ -316,24 +313,7 @@ export default class GameComponent extends cc.Component {
         this.pigCptList = []
         this.slotPigList = []
         this.hsCptList = []
-        let iconList = []
-        for(let i = 1; i <= 14; i++){
-            iconList.push(i)
-        }
-        ToolHelper.shuffle(iconList)
-        let itemIdList = []
-        for(let i = 0; i < iconList.length; i++){
-            if(i < 10){
-                for(let j = 0; j < 15; j++){
-                    itemIdList.push(iconList[i])
-                }
-            }else{
-                for(let j = 0; j < 15; j++){
-                    itemIdList.push(iconList[i])
-                }
-            }
-        }
-        ToolHelper.shuffle(itemIdList)
+        let pigIdList = ToolHelper.getPigIdList()
         let index = 0
         let checkNode = (root)=>{
             //@ts-ignore
@@ -343,7 +323,7 @@ export default class GameComponent extends cc.Component {
                 checkNode(child)
                 let pigCpt = child.getComponent(PigComponent)
                 if(pigCpt){
-                    this.setPig(pigCpt, itemIdList[index], index)
+                    this.setPig(pigCpt, pigIdList[index], index)
                     this.pigCptList.push(pigCpt)
                     index = index + 1
                 }
@@ -355,18 +335,18 @@ export default class GameComponent extends cc.Component {
             this.setUpList(pigCpt)
         }
         this.refreshBlack()
-        this.tipAnim.x = 1334
+        this.tipAnim.x = cc.winSize.width
         this.tipAnim.active = true
         cc.tween(this.tipAnim)
             .delay(1)
             .to(0.5, { x: 0 }, { easing: 'backOut' })
             .delay(1)
-            .to(0.5, { x: -1334 }, { easing: 'backOut' })
+            .to(0.5, { x: -cc.winSize.width }, { easing: 'backOut' })
             .call(()=>{
                 this.tipAnim.active = false
             })
             .start()
-        this.randomLevel.x = 1000
+        this.randomLevel.x = cc.winSize.width
         cc.tween(this.randomLevel)
             .delay(0.1)
             .to(1, { position: cc.v2(0, 0) }, { easing: 'backOut' })
@@ -422,7 +402,7 @@ export default class GameComponent extends cc.Component {
         pigCpt.curState = PigState.IsDestroyed
         cpt1.curState = PigState.IsDestroyed
         cpt2.curState = PigState.IsDestroyed
-        ToolHelper.scheduleOnce("checkFinish", this.fnt+1, ()=>{
+        ToolHelper.scheduleOnce("checkFinish22", this.fnt+1, ()=>{
             if(this.pigCptList.length == 0){
                 if(this.randomLevel){
                     ResultLayer.show(true)

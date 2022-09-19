@@ -131,6 +131,28 @@ export class _ToolHelper {
             cc.audioEngine.playEffect(audio, false)
         })
     }
+
+    getPigIdList(){
+        let idList = []
+        for(let i = 1; i <= 14; i++){
+            idList.push(i)
+        }
+        ToolHelper.shuffle(idList)
+        let pigIdList = []
+        for(let i = 0; i < idList.length; i++){
+            if(i < 10){
+                for(let j = 0; j < 15; j++){
+                    pigIdList.push(idList[i])
+                }
+            }else{
+                for(let j = 0; j < 15; j++){
+                    pigIdList.push(idList[i])
+                }
+            }
+        }
+        ToolHelper.shuffle(pigIdList)
+        return pigIdList
+    }
 }
 
 export const ToolHelper = new _ToolHelper();
