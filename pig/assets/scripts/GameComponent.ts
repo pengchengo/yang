@@ -376,7 +376,7 @@ export default class GameComponent extends cc.Component {
     }
 
     removePigs(pigCpt, moveList){
-        let moveRight = ()=>{
+        let movePigs = ()=>{
             for(let i = 0; i < moveList.length; i++){
                 let cpt = moveList[i]
                 cpt.bottomIndex = cpt.bottomIndex + 1
@@ -388,21 +388,21 @@ export default class GameComponent extends cc.Component {
             }
         }
         if(pigCpt.bottomIndex < 2){
-            moveRight()
+            movePigs()
             this.findLose()
             return
         }
         let cpt1 = this.slotPigList[pigCpt.bottomIndex-2]
         let cpt2 = this.slotPigList[pigCpt.bottomIndex-1]
         if(pigCpt.pigId != cpt1.pigId || pigCpt.pigId != cpt2.pigId){
-            moveRight()
+            movePigs()
             this.findLose()
             return
         }
         pigCpt.curState = PigState.IsDestroyed
         cpt1.curState = PigState.IsDestroyed
         cpt2.curState = PigState.IsDestroyed
-        ToolHelper.scheduleOnce("checkFinish22", this.fnt+1, ()=>{
+        ToolHelper.scheduleOnce("1", this.fnt+1, ()=>{
             if(this.pigCptList.length == 0){
                 if(this.randomLevel){
                     ResultLayer.show(true)
@@ -412,16 +412,6 @@ export default class GameComponent extends cc.Component {
                 }
             }
         })
-        cc.tween(this.node)
-            .delay(this.fnt)
-            .call(()=>{
-                //SoundMgr.playSound("yangremove")
-                this.disappearEffect(cpt1)
-                this.disappearEffect(cpt2)
-                this.disappearEffect(pigCpt)
-            })
-            .start()
-        this.slotPigList.splice(pigCpt.bottomIndex-2, 3)
         for(let i = 0; i < moveList.length; i++){
             let cpt = moveList[i]
             cpt.bottomIndex = cpt.bottomIndex + 1
@@ -434,6 +424,15 @@ export default class GameComponent extends cc.Component {
                 .to(this.fnt, { position: cc.v2(pos2.x, pos2.y) })
                 .start()
         }
+        cc.tween(this.node)
+            .delay(this.fnt)
+            .call(()=>{
+                this.disappearEffect(cpt1)
+                this.disappearEffect(cpt2)
+                this.disappearEffect(pigCpt)
+            })
+            .start()
+        this.slotPigList.splice(pigCpt.bottomIndex-2, 3)
     }
 
     initTouch(){
