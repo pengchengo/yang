@@ -9,7 +9,7 @@ import GameLayer from "./GameLayer";
 import PigComponent, { PigState } from "./PigComponent";
 import PopLayer, { PopType } from "./PopLayer";
 import ResultLayer from "./ResultLayer";
-import { ToolSystem } from "./ToolSystem";
+import { ToolHelper } from "./ToolHelper";
 
 const {ccclass, property} = cc._decorator;
 
@@ -44,8 +44,8 @@ export default class GameComponent extends cc.Component {
     // onLoad () {}
 
     start () {
-        ToolSystem.init()
-        ToolSystem.playMusic()
+        ToolHelper.init()
+        ToolHelper.playMusic()
         GameComponent.Inst = this
         this.node = this.node
         this.restartLevel()
@@ -120,7 +120,7 @@ export default class GameComponent extends cc.Component {
             let pigCpt = this.pigCptList[i]
             pigIdList.push(pigCpt.pigId)
         }
-        ToolSystem.shuffle(pigIdList)
+        ToolHelper.shuffle(pigIdList)
         for (let i = 0; i < this.pigCptList.length; i++) {
             let pigCpt = this.pigCptList[i]
             pigCpt.pigId = pigIdList[i]
@@ -138,7 +138,7 @@ export default class GameComponent extends cc.Component {
     }
 
     update(dt){
-        ToolSystem.update(dt)
+        ToolHelper.update(dt)
     }
 
     refreshMk(cpt){
@@ -320,7 +320,7 @@ export default class GameComponent extends cc.Component {
         for(let i = 1; i <= 14; i++){
             iconList.push(i)
         }
-        ToolSystem.shuffle(iconList)
+        ToolHelper.shuffle(iconList)
         let itemIdList = []
         for(let i = 0; i < iconList.length; i++){
             if(i < 10){
@@ -333,7 +333,7 @@ export default class GameComponent extends cc.Component {
                 }
             }
         }
-        ToolSystem.shuffle(itemIdList)
+        ToolHelper.shuffle(itemIdList)
         let index = 0
         let checkNode = (root)=>{
             //@ts-ignore
@@ -386,12 +386,73 @@ export default class GameComponent extends cc.Component {
                 let by1 = otherCpt.node.y
                 let bx2 = otherCpt.node.x + this.pigWidth
                 let by2 = otherCpt.node.y + this.pigHeight
-                const overlapWidth = Math.min(ax2, bx2) - Math.max(ax1, bx1), overlapHeight = Math.min(ay2, by2) - Math.max(ay1, by1);
-                const overlapArea = Math.max(overlapWidth, 0) * Math.max(overlapHeight, 0);
-                if(overlapArea > this.pigArea/8){
+                const w = Math.min(ax2, bx2) - Math.max(ax1, bx1), h = Math.min(ay2, by2) - Math.max(ay1, by1);
+                const a = Math.max(w, 0) * Math.max(h, 0);
+                if(a > this.pigArea/8){
                     cpt.upPigList.push(otherCpt)
                 }
             }
+        }
+    }
+
+    removePigs(pigCpt, moveList){
+        let moveRight = ()=>{
+            for(let i = 0; i < moveList.length; i++){
+                let cpt = moveList[i]
+                cpt.bottomIndex = cpt.bottomIndex + 1
+                let tPos = this.slotPosList[cpt.bottomIndex]
+                cc.Tween.stopAllByTarget(cpt.node)
+                cc.tween(cpt.node)
+                    .to(this.fnt, { position: cc.v2(tPos.x, tPos.y) })
+                    .start()
+            }
+        }
+        if(pigCpt.bottomIndex < 2){
+            moveRight()
+            this.findLose()
+            return
+        }
+        let cpt1 = this.slotPigList[pigCpt.bottomIndex-2]
+        let cpt2 = this.slotPigList[pigCpt.bottomIndex-1]
+        if(pigCpt.pigId != cpt1.pigId || pigCpt.pigId != cpt2.pigId){
+            moveRight()
+            this.findLose()
+            return
+        }
+        pigCpt.curState = PigState.IsDestroyed
+        cpt1.curState = PigState.IsDestroyed
+        cpt2.curState = PigState.IsDestroyed
+        ToolHelper.scheduleOnce("checkFinish", this.fnt+1, ()=>{
+            if(this.pigCptList.length == 0){
+                if(this.randomLevel){
+                    ResultLayer.show(true)
+                }else{
+                    this.node.getChildByName("pigList1").active = false
+                    this.initPigList2()
+                }
+            }
+        })
+        cc.tween(this.node)
+            .delay(this.fnt)
+            .call(()=>{
+                //SoundMgr.playSound("yangremove")
+                this.disappearEffect(cpt1)
+                this.disappearEffect(cpt2)
+                this.disappearEffect(pigCpt)
+            })
+            .start()
+        this.slotPigList.splice(pigCpt.bottomIndex-2, 3)
+        for(let i = 0; i < moveList.length; i++){
+            let cpt = moveList[i]
+            cpt.bottomIndex = cpt.bottomIndex + 1
+            let pos1 = this.slotPosList[cpt.bottomIndex]
+            cpt.bottomIndex = cpt.bottomIndex - 3
+            let pos2 = this.slotPosList[cpt.bottomIndex]
+            cc.Tween.stopAllByTarget(cpt.node)
+            cc.tween(cpt.node)
+                .to(this.fnt, { position: cc.v2(pos1.x, pos1.y) })
+                .to(this.fnt, { position: cc.v2(pos2.x, pos2.y) })
+                .start()
         }
     }
 
@@ -406,12 +467,42 @@ export default class GameComponent extends cc.Component {
             }
             touchBeginPos = evt.getLocation();
             for(let i = 0; i < this.pigCptList.length; i++){
-                let cpt = this.pigCptList[i]
-                if (ToolSystem.isInNode(cpt.icon, touchBeginPos) && !this.refreshMk(cpt)) {
+                let pigCpt = this.pigCptList[i]
+                if (ToolHelper.isInNode(pigCpt.icon, touchBeginPos) && !this.refreshMk(pigCpt)) {
                     this.pigCptList.splice(i, 1)
-                    this.MovetoSlot(cpt)
+                    this.hs3Map[pigCpt.resetIndex] = false
+                    let moveList = []
+                    let insertIndex = -1
+                    if(this.slotPigList.length <= 1){
+                        insertIndex = this.slotPigList.length
+                    }else{
+                        for(let i = 0; i < this.slotPigList.length; i++){
+                            if(insertIndex != -1){
+                                moveList.push(this.slotPigList[i])
+                            }else if(this.slotPigList[i].pigId == pigCpt.pigId && (!this.slotPigList[i+1] || this.slotPigList[i+1].pigId != pigCpt.pigId)){
+                                insertIndex = i+1
+                            }
+                        }
+                        if(insertIndex == -1){
+                            insertIndex = this.slotPigList.length
+                        }
+                    }
+                    pigCpt.curState = PigState.InSlot
+                    this.hsCptList.push(pigCpt)
+                    pigCpt.bottomIndex = insertIndex
+                    this.slotPigList.splice(insertIndex, 0, pigCpt)
+                    let targetNode = this.slotPosList[pigCpt.bottomIndex]
+                    //this.isPlayAnim = true
+                    
+                    this.removePigs(pigCpt, moveList)
+                    cc.Tween.stopAllByTarget(pigCpt.node)
+                    cc.tween(pigCpt.node)
+                        .to(this.fnt, { position: cc.v2(targetNode.x, targetNode.y) })
+                        .call(()=>{
+                        })
+                        .start()
                     this.refreshBlack()
-                    ToolSystem.playEffect("click")
+                    ToolHelper.playEffect("click")
                     break
                 }
             }
@@ -460,7 +551,7 @@ export default class GameComponent extends cc.Component {
     }
 
     disappearEffect(cpt){
-        ToolSystem.playEffect("compose")
+        ToolHelper.playEffect("compose")
         let effect = this.effectList[cpt.bottomIndex]
         effect.active = true
         effect.getComponent(cc.ParticleSystem).resetSystem();
@@ -474,101 +565,6 @@ export default class GameComponent extends cc.Component {
             .to(0.1, { scale: 0 })
             .call(()=>{
                 cpt.node.active = false
-            })
-            .start()
-    }
-
-    removePigs(pigCpt, moveList){
-        let moveRight = ()=>{
-            for(let i = 0; i < moveList.length; i++){
-                let cpt = moveList[i]
-                cpt.bottomIndex = cpt.bottomIndex + 1
-                let tPos = this.slotPosList[cpt.bottomIndex]
-                cc.Tween.stopAllByTarget(cpt.node)
-                cc.tween(cpt.node)
-                    .to(this.fnt, { position: cc.v2(tPos.x, tPos.y) })
-                    .start()
-            }
-        }
-        if(pigCpt.bottomIndex < 2){
-            moveRight()
-            this.findLose()
-            return
-        }
-        let cpt1 = this.slotPigList[pigCpt.bottomIndex-2]
-        let cpt2 = this.slotPigList[pigCpt.bottomIndex-1]
-        if(pigCpt.pigId != cpt1.pigId || pigCpt.pigId != cpt2.pigId){
-            moveRight()
-            this.findLose()
-            return
-        }
-        pigCpt.curState = PigState.IsDestroyed
-        cpt1.curState = PigState.IsDestroyed
-        cpt2.curState = PigState.IsDestroyed
-        ToolSystem.scheduleOnce("checkFinish", this.fnt+1, ()=>{
-            if(this.pigCptList.length == 0){
-                if(this.randomLevel){
-                    ResultLayer.show(true)
-                }else{
-                    this.node.getChildByName("pigList1").active = false
-                    this.initPigList2()
-                }
-            }
-        })
-        cc.tween(this.node)
-            .delay(this.fnt)
-            .call(()=>{
-                //SoundMgr.playSound("yangremove")
-                this.disappearEffect(cpt1)
-                this.disappearEffect(cpt2)
-                this.disappearEffect(pigCpt)
-            })
-            .start()
-        this.slotPigList.splice(pigCpt.bottomIndex-2, 3)
-        for(let i = 0; i < moveList.length; i++){
-            let cpt = moveList[i]
-            cpt.bottomIndex = cpt.bottomIndex + 1
-            let pos1 = this.slotPosList[cpt.bottomIndex]
-            cpt.bottomIndex = cpt.bottomIndex - 3
-            let pos2 = this.slotPosList[cpt.bottomIndex]
-            cc.Tween.stopAllByTarget(cpt.node)
-            cc.tween(cpt.node)
-                .to(this.fnt, { position: cc.v2(pos1.x, pos1.y) })
-                .to(this.fnt, { position: cc.v2(pos2.x, pos2.y) })
-                .start()
-        }
-    }
-
-    MovetoSlot(pigCpt){
-        this.hs3Map[pigCpt.resetIndex] = false
-        let moveList = []
-        let insertIndex = -1
-        if(this.slotPigList.length <= 1){
-            insertIndex = this.slotPigList.length
-        }else{
-            for(let i = 0; i < this.slotPigList.length; i++){
-                if(insertIndex != -1){
-                    moveList.push(this.slotPigList[i])
-                }else if(this.slotPigList[i].pigId == pigCpt.pigId && (!this.slotPigList[i+1] || this.slotPigList[i+1].pigId != pigCpt.pigId)){
-                    insertIndex = i+1
-                }
-            }
-            if(insertIndex == -1){
-                insertIndex = this.slotPigList.length
-            }
-        }
-        pigCpt.curState = PigState.InSlot
-        this.hsCptList.push(pigCpt)
-        pigCpt.bottomIndex = insertIndex
-        this.slotPigList.splice(insertIndex, 0, pigCpt)
-        let targetNode = this.slotPosList[pigCpt.bottomIndex]
-        //this.isPlayAnim = true
-        
-        this.removePigs(pigCpt, moveList)
-        cc.Tween.stopAllByTarget(pigCpt.node)
-        cc.tween(pigCpt.node)
-            .to(this.fnt, { position: cc.v2(targetNode.x, targetNode.y) })
-            .call(()=>{
             })
             .start()
     }

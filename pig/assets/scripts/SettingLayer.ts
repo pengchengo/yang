@@ -6,7 +6,7 @@
 //  - https://docs.cocos.com/creator/2.4/manual/en/scripting/life-cycle-callbacks.html
 
 import GameComponent from "./GameComponent";
-import { ToolSystem } from "./ToolSystem";
+import { ToolHelper } from "./ToolHelper";
 
 const {ccclass, property} = cc._decorator;
 
@@ -38,12 +38,12 @@ export default class SettingLayer extends cc.Component {
     }
 
     refreshBtn(){
-        if(ToolSystem.hasMusic()){
+        if(ToolHelper.hasMusic()){
             this.node.getChildByName("btnMusic").getChildByName("open").active = true
         }else{
             this.node.getChildByName("btnMusic").getChildByName("open").active = false
         }
-        if(ToolSystem.hasSound()){
+        if(ToolHelper.hasSound()){
             this.node.getChildByName("btnSound").getChildByName("open").active = true
         }else{
             this.node.getChildByName("btnSound").getChildByName("open").active = false
@@ -51,30 +51,30 @@ export default class SettingLayer extends cc.Component {
     }
 
     onClickEffect(){
-        ToolSystem.playEffect("click")
-        ToolSystem.changeSound()
+        ToolHelper.playEffect("click")
+        ToolHelper.changeSound()
         this.refreshBtn()
     }
 
     onClickMusic(){
-        ToolSystem.playEffect("click")
-        if(ToolSystem.hasMusic()){
-            ToolSystem.changeMusic()
-            ToolSystem.stopMusic()
+        ToolHelper.playEffect("click")
+        if(ToolHelper.hasMusic()){
+            ToolHelper.changeMusic()
+            ToolHelper.stopMusic()
         }else{
-            ToolSystem.changeMusic()
-            ToolSystem.playMusic()
+            ToolHelper.changeMusic()
+            ToolHelper.playMusic()
         }
         this.refreshBtn()
     }
 
     onClickClose(){
-        ToolSystem.playEffect("click")
+        ToolHelper.playEffect("click")
         this.hide()
     }
 
     onClickRestart(){
-        ToolSystem.playEffect("click")
+        ToolHelper.playEffect("click")
         this.hide()
         GameComponent.Inst.restartLevel()
     }

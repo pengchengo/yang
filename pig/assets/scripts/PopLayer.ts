@@ -6,7 +6,7 @@
 //  - https://docs.cocos.com/creator/2.4/manual/en/scripting/life-cycle-callbacks.html
 
 import GameComponent from "./GameComponent";
-import { ToolSystem } from "./ToolSystem";
+import { ToolHelper } from "./ToolHelper";
 
 const {ccclass, property} = cc._decorator;
 
@@ -58,7 +58,7 @@ export default class PopLayer extends cc.Component {
     }
 
     onClickGet(){
-        ToolSystem.playEffect("click")
+        ToolHelper.playEffect("click")
         this.hide()
         if(this.info.getCallBack){
             this.info.getCallBack()
@@ -66,7 +66,7 @@ export default class PopLayer extends cc.Component {
     }
 
     onClickClose(){
-        ToolSystem.playEffect("click")
+        ToolHelper.playEffect("click")
         this.hide()
     }
     // update (dt) {}

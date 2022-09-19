@@ -1,6 +1,6 @@
 import GameComponent from "./GameComponent"
 
-export class _ToolSystem {
+export class _ToolHelper {
     cancelMusicKey = "cancelMusicKey"
     cancelSoundKey = "cancelSoundKey"
     cancelMusic = false
@@ -133,4 +133,4 @@ export class _ToolSystem {
     }
 }
 
-export const ToolSystem = new _ToolSystem();
+export const ToolHelper = new _ToolHelper();

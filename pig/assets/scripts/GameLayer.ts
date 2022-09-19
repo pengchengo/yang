@@ -8,7 +8,7 @@
 import GameComponent from "./GameComponent";
 import PopLayer, { PopType } from "./PopLayer";
 import SettingLayer from "./SettingLayer";
-import { ToolSystem } from "./ToolSystem";
+import { ToolHelper } from "./ToolHelper";
 
 const {ccclass, property} = cc._decorator;
 
@@ -36,10 +36,10 @@ export default class GameLayer extends cc.Component {
     }
 
     public onClickBtn1(){
-        ToolSystem.playEffect("click")
+        ToolHelper.playEffect("click")
         if(GameComponent.Inst.back1Num > 0){
             if(!GameComponent.Inst.canUseOne()){
-                ToolSystem.showTip("当前不可使用回退道具")
+                ToolHelper.showTip("当前不可使用回退道具")
                 return
             }
             GameComponent.Inst.back1Num = GameComponent.Inst.back1Num - 1
@@ -54,14 +54,14 @@ export default class GameLayer extends cc.Component {
     }
 
     public onClickBtn3(){
-        ToolSystem.playEffect("click")
+        ToolHelper.playEffect("click")
         if(GameComponent.Inst.useBack3Num > 0){
-            ToolSystem.showTip("上移道具只能使用一次")
+            ToolHelper.showTip("上移道具只能使用一次")
             return
         }
         if(GameComponent.Inst.back3Num > 0){
             if(!GameComponent.Inst.canBack3()){
-                ToolSystem.showTip("当前不可使用上移道具")
+                ToolHelper.showTip("当前不可使用上移道具")
                 return
             }
             GameComponent.Inst.back3Num = GameComponent.Inst.back3Num - 1
@@ -76,7 +76,7 @@ export default class GameLayer extends cc.Component {
     }
 
     public onClickBtnRefresh(){
-        ToolSystem.playEffect("click")
+        ToolHelper.playEffect("click")
         if(GameComponent.Inst.refreshNum > 0){
             GameComponent.Inst.refreshNum = GameComponent.Inst.refreshNum - 1
             GameComponent.Inst.onClickBtnRefresh()
@@ -90,7 +90,7 @@ export default class GameLayer extends cc.Component {
     }
 
     public onClickSetting(){
-        ToolSystem.playEffect("click")
+        ToolHelper.playEffect("click")
         SettingLayer.show()
     }
 
